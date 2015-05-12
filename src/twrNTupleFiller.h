@@ -37,7 +37,7 @@ public:
 	{
 // 		sprintf(inDataPath,"root://eosams.cern.ch//eos/ams/Data/AMS02/2011B/ISS.B620/pass4/");
 // 		sprintf(outNTuplePath,"/afs/cern.ch/user/b/behlmann/twr/resClass/ntuples/");
-		AMSSetupR::RTI::UseLatest();
+//		AMSSetupR::RTI::UseLatest(6);
 		RichRingR::setBetaCorrection( RichRingR::fullUniformityCorrection );
 	}
 	~twrNTupleFiller() {}

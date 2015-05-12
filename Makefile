@@ -19,15 +19,15 @@ CPPFLAGS= -I$(SRC) -I$(ANATOOL_U) -I$(ANATOOL_L) -D_PGTRACK_ -D__ROOTSHAREDLIBRA
 CXXFLAGS= $(DEBUGOPT) -fPIC -Wno-write-strings  $(CPPFLAGS)
 CFLAGS = $(DEBUGOPT)
 DEBUGOPT = -O3
+SLC_NO=6
 # if test -z "$$SLC_NO"; then SLC_NO="6"; echo "SLC_NO environment variable not set.  Using default value of SLC_NO=6."; fi;
 AMSNTUPLELIB=ntuple_slc$(SLC_NO)_PG
-# SLC_NO=6
 # SLC_NO=4
 
 # Files to be included in library (classes & common functions); each should have a corresponding header file.
 # These should also match the pragma statements in the linkdef.h file
 LIB_SRCS = $(SRC)resClassCommon.C
-LIB_SRCS+= $(SRC)twrNTuple.C $(SRC)twrLevel1R.C
+LIB_SRCS+= $(SRC)twrNTuple.C $(SRC)twrLevel1R.C $(SRC)twrRTI.C 
 #LIB_SRCS+= $(SRC)twrFetchedQuantities.C
 #LIB_SRCS+= $(SRC)absTemplate.C $(SRC)tf1Template.C $(SRC)massTemplate.C $(SRC)templateColl.C
 

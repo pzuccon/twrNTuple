@@ -1,6 +1,50 @@
 #include "twrNTupleFiller.h"
 
 //ClassImp(twrNTupleFiller);
+static void cloneRTI(twrRTI & dest,  AMSSetupR::RTI& orig){
+
+  dest.IsInSAA=orig.IsInSAA();
+  
+  dest.run=orig.run;  
+  dest.evno=orig.evno;
+  dest.evnol=orig.evnol;
+  dest.lf=orig.lf;  
+  
+  for (int ii=0;ii<4;ii++)
+    for (int jj=0;jj<2;jj++){
+      dest.cf[ii][jj]=orig.cf[ii][jj];  
+      dest.cfi[ii][jj]=orig.cfi[ii][jj];  
+    }
+
+  dest.mphe=orig.mphe;
+  dest.theta=orig.theta;
+  dest.phi=orig.phi;
+  dest.r=orig.r;    
+  dest.zenith=orig.zenith; 
+  dest.glat=orig.glat;   
+  dest.glong=orig.glong; 
+  dest.nev=orig.nev;    
+  dest.nerr=orig.nerr;  
+  dest.ntrig=orig.ntrig; 
+  dest.nhwerr=orig.nhwerr;
+  dest.npart=orig.npart;  
+  for (int ii=0;ii<2;ii++){
+    dest.usec[ii]=orig.usec[ii];
+    dest.utctime[ii]=orig.utctime[ii];
+    for (int jj=0;jj<2;jj++)
+      dest.nl1l9[ii][jj]=orig.nl1l9[ii][jj];
+    for (int kk=0;kk<3;kk++)
+      dest.dl1l9[ii][kk]=orig.dl1l9[ii][kk]; 
+  }
+  dest.mtrdh=orig.mtrdh;
+  dest.good=orig.good;
+  dest.utime=orig.utime;
+  dest.Version=orig.Version; 
+
+
+}
+
+
 static void cloneLevel1R( twrLevel1R& dest, const Level1R &copyMe)
 {
   dest.PhysBPatt = copyMe.PhysBPatt;
@@ -73,19 +117,22 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	nCuts++;
 	int accumCuts[nCuts];
 	for (int i=0; i<nCuts; i++) accumCuts[i]=0;
-
+	
 	// Decide how many events to loop through then start
 	int nEv = ch.GetEntries();
 	int nToUse;
+	AMSSetupR::RTI::UseLatest(6);
+	AMSEventR* ev0=ch.GetEvent();
 	if (maxEvents < 0) nToUse = nEv;
 	else nToUse = (maxEvents<nEv?maxEvents:nEv);
+	long int presel=0;
 	for (int i = 0; i < nToUse;i++)
 	{
-		if (i%10000==0) printf("Processed %9d out of %9d (preselect)\n",i,nToUse);
+	  if (i%1000==0) printf("Processed %9d out of %9d(max %9d)  preselected %9d \n",i,nToUse,nEv,presel);
 		AMSEventR* ev = ch.GetEvent(i);
 		int procRet = fillNTuple_preselect(nt, ev);
 //		printf("ev%d: %d\n",i,procRet);
-		if (procRet==0) tt->Fill();
+		if (procRet==0) {tt->Fill(); presel++;}
 		if (procRet<nCuts) accumCuts[procRet]++;
 //		hman.Fill("ProcessEventRet",procRet);
 //		if (stop==1) break;
@@ -254,10 +301,15 @@ int twrNTupleFiller::doPreselect_separate_files(char* listFile, int nMaxFiles)
 */
 
 int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
-{
-	TofRecH::ReBuild();
-	
-	twrNT.isMC = ((ev->nMCEventg()>0)?true:false);
+{  
+  
+
+  int hrPart = highestRigParticle(ev);
+  // Problem finding the particle with the highest (absolute) rigidity.
+  //    (This includes the case that there are no particles with an associated track.)
+  if (hrPart<0) return 6;
+  
+  twrNT.isMC = ((ev->nMCEventg()>0)?true:false);
 
 	if (!twrNT.isMC)
 	{
@@ -273,17 +325,16 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	}
 
 	twrNT.fStatus=ev->fStatus;
+	twrNT.Event=ev->Event();
+	twrNT.Run=ev->Run();
 
-	int hrPart = highestRigParticle(ev);
-	// Problem finding the particle with the highest (absolute) rigidity.
-	//    (This includes the case that there are no particles with an associated track.)
-	if (hrPart<0) return 6;
 	ParticleR* par = ev->pParticle(hrPart);
 
 	TrTrackR* trTr = par->pTrTrack();
 	
 	// No XY hit on tracker layer 1
-	if (!trTr->TestHitLayerJHasXY(1)) return 7;
+	//pz	if (!trTr->TestHitLayerJHasXY(1)) return 7;
+	if (!trTr->TestHitLayerJ(1)) return 7;
 	
 	// Choutko algo. fit
 	twrNT.trFitCode = trTr->iTrTrackPar(1,3,0);
@@ -300,6 +351,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 //	if ((twrNT.iBH == -1)||(!twrNT.iBeta())) return 3;
 //	if (!twrNT.iRichRing()) return 4;
 	
+	TofRecH::ReBuild();
 	BetaHR* betaH = par->pBetaH();
 	if (!betaH || (betaH->GetBeta()<=0)) return 10;
 	twrNT.betaHGood = betaH->IsGoodBeta();
@@ -320,6 +372,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	
 	if (ev->nLevel1() != 1) return 14;
 	cloneLevel1R(twrNT.lvl1,ev->Level1(0));
+	cloneRTI(twrNT.RTI,rti);
 
 //	twrNT.lvl1 = new twrLevel1R();
 

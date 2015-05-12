@@ -3,6 +3,7 @@
 
 #include "TObject.h"
 #include "twrLevel1R.h"
+#include "twrRTI.h"
 
 // Variables fetched by ProcessEvent(), put into a class
 class twrNTuple: public TObject
@@ -15,7 +16,10 @@ class twrNTuple: public TObject
   	}
   	
 	twrLevel1R lvl1;
-	
+	twrRTI     RTI;
+
+	unsigned int Event;
+	unsigned int Run;
   	unsigned long long fStatus;
   	int nParticle_withTrack;
   	int iBH;

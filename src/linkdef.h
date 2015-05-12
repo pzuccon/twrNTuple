@@ -9,6 +9,7 @@
 //#pragma link C++ class massTemplate+;
 //#pragma link C++ class templateColl+;
 #pragma link C++ class twrLevel1R+;
+#pragma link C++ class twrRTI+;
 #pragma link C++ class twrNTuple+;
 //#pragma link C++ class twrFetchedQuantities+;
 #pragma link C++ defined_in "src/resClassCommon.h";
