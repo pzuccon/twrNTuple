@@ -351,7 +351,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 //	if ((twrNT.iBH == -1)||(!twrNT.iBeta())) return 3;
 //	if (!twrNT.iRichRing()) return 4;
 	
-	TofRecH::ReBuild();
+//	TofRecH::ReBuild();
 	BetaHR* betaH = par->pBetaH();
 	if (!betaH || (betaH->GetBeta()<=0)) return 10;
 	twrNT.betaHGood = betaH->IsGoodBeta();
