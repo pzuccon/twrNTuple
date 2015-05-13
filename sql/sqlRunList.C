@@ -49,7 +49,7 @@ int _updateDB(const char* line, int nExtra, char** extraArgs);
 
 void _usage(char *progname)
 {
-	printf("Usage:\t %s <-AQU> <-i inListFile | -f fName> [-t tablename] [-n nMax]",progname);
+	printf("Usage:\t %s <-AQU> <-l inListFile | -f fName> [-t tablename] [-n nMax]",progname);
 	printf("\n\t\t[-p prefixLength] [-hv] [col1 arg1 col2 arg2 ...]\n");
 	printf("Options:\n");
 	printf("\t-A --add    \t Add rows with given value(s) for fName\n");
