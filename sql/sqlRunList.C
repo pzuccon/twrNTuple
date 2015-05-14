@@ -264,6 +264,14 @@ int main(int argc, char **argv)
 	// Process single fName
 	if (fNameSet)
 	{
+		// Remove a prefix if one exists
+		if (prefixLength && strlen(fName1)>prefixLength)
+		{
+			char *ltmp = fName1;
+			ltmp += prefixLength;
+			sprintf(fName1,"%s",ltmp);
+		}
+	
 		if (queryDB) retQ = _queryDB(fName1);
 		if (addDB) retQ = _addDB(fName1);
 		if (updateDB) retQ = _updateDB(fName1,nExtra,extraArgs);
@@ -293,6 +301,7 @@ int main(int argc, char **argv)
 		
 		ifs.getline(line,200);
 		if (strlen(line)<2) continue;  // Don't use blank line at end of file
+		// Remove prefix if requested
 		if (prefixLength && strlen(line)>prefixLength)
 		{
 			char *ltmp = line;
