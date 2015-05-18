@@ -10,7 +10,7 @@ class twrNTuple: public TObject
 {
   public:
   	
-	twrNTuple(): TObject(), fStatus(0), lvl1() {}
+	twrNTuple(): TObject(), lvl1(), fStatus(0) {}
   	~twrNTuple()
   	{
   	}
