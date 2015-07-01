@@ -403,12 +403,29 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	RichRingR* richRing = par->pRichRing();
 	if (richRing>0)
 	{
-		twrNT.flagRich = RichQC(richRing);
 		twrNT.betaRich = richRing->getBeta();
 		twrNT.betaRich_Err = richRing->getBetaError();
-		const float* rtep = richRing->getTrackEmissionPoint();
-		for (int k=0; k<5; k++) twrNT.richTrackEmPt[k] = rtep[k];
-		twrNT.richDistanceTileBorder = float(richRing->DistanceTileBorder());
+		{
+			rich.IsGood = richRing->IsGood();
+			rich.IsClean = richRing->IsClean();
+			rich.IsNaF = richRing->IsNaF();
+			rich.prob = richRing->getProb();
+			rich.PMTs = richRing->getPMTs();
+			rich.photoElectrons = richRing->getPhotoElectrons();
+			rich.collectedPhotoElectrons = RichHitR::getCollectedPhotoElectrons();
+			rich.PMTChargeConsistency = richRing->getPMTChargeConsistency();
+			const float* rtep = richRing->getTrackEmissionPoint();
+			for (int i=0; i<5; i++) rich.trackEmPt[i] = rtep[i];
+			rich.expectedPhotoElectrons = richRing->getExpectedPhotoelectrons();
+			rich.betaConsistency = richRing->getBetaConsistency();
+			rich.tileIndex = richRing->getTileIndex();
+			rich.distanceTileBorder = richRing->DistanceTileBorder();
+			rich.richHit_PMTs = RichHitR::getPMTs();
+			rich.richHit_PMTs_false = RichHitR::getPMTs(false);
+		}
+		twrNT.flagRich = RichQC(&rich);
+// 		for (int k=0; k<5; k++) twrNT.richTrackEmPt[k] = rtep[k];
+// 		twrNT.richDistanceTileBorder = float(richRing->DistanceTileBorder());
 		//	twrNT.isNaF = richRing->IsNaF();
 	}
 	else
@@ -416,8 +433,26 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 		twrNT.flagRich = 0;	
 		twrNT.betaRich = 0;
 		twrNT.betaRich_Err = 0;
-		for (int k=0; k<5; k++) twrNT.richTrackEmPt[k] = 0;
-		twrNT.richDistanceTileBorder = 0;
+		
+		{
+			rich.IsGood = false;
+			rich.IsClean = false;
+			rich.IsNaF = false;
+			rich.prob = 0.;
+			rich.PMTs = 0;
+			rich.photoElectrons = 0.;
+			rich.collectedPhotoElectrons = 0.;
+			rich.PMTChargeConsistency = 0.;
+			for (int i=0; i<5; i++) rich.trackEmPt[i] = 0.;
+			rich.expectedPhotoElectrons = 0.;
+			rich.betaConsistency = 0.;
+			rich.tileIndex = 0;
+			rich.distanceTileBorder = 0.;
+			rich.richHit_PMTs = 0;
+			rich.richHit_PMTs_false = 0;
+		}
+// 		for (int k=0; k<5; k++) twrNT.richTrackEmPt[k] = 0;
+// 		twrNT.richDistanceTileBorder = 0;
 	}
 
 	twrNT.betaTof = betaH->GetBeta();
@@ -472,7 +507,7 @@ int twrNTupleFiller::highestRigParticle(AMSEventR* ev)
 	return ret;
 }
 
-int twrNTupleFiller::RichQC(RichRingR *prich)
+int twrNTupleFiller::RichQC(twrRichQC *vals)
 // Rich quality cuts, as provided by J. Berdugo
 // Return 1 if object passes all cuts.  Return negative value of first cut not met otherwise.
 {
@@ -498,37 +533,37 @@ int twrNTupleFiller::RichQC(RichRingR *prich)
 	kbadtile[1]=7;
 	kbadtile[2]=87;
 	kbadtile[3]=100;
-	kbadtile[4]=108;   
+	kbadtile[4]=108;
 	
-	if(!rich.IsGood() || !rich.IsClean()) return -1;
-	if(rich.getProb()<cut_prob) return -2;
-	if(rich.getPMTs()<cut_pmt) return -3;
-	if(rich.getPhotoElectrons()/RichHitR::getCollectedPhotoElectrons() < cut_collovertotal) return -4;
-	if(rich.getPMTChargeConsistency()>cut_chargeconsistency) return -5;
+	if(!vals->IsGood || !vals->IsClean) return -1;
+	if(vals->prob < cut_prob) return -2;
+	if(vals->PMTs < cut_pmt) return -3;
+	if(vals->photoElectrons / vals->collectedPhotoElectrons < cut_collovertotal) return -4;
+	if(vals->PMTChargeConsistency > cut_chargeconsistency) return -5;
 	
 	//  const float* TrackEmission=ring.getTrackEmissionPoint();
-	float x=rich.getTrackEmissionPoint()[0];
-	float y=rich.getTrackEmissionPoint()[1];
+	float x=vals->trackEmPt[0];
+	float y=vals->trackEmPt[1];
 	
-	if(rich.IsNaF())
+	if(vals->IsNaF)
 	{
-		if(rich.getExpectedPhotoelectrons()<cut_expphe[0]) return -6;
-		if(rich.getBetaConsistency()>cut_betaconsistency[0]) return -7;
+		if(vals->expectedPhotoElectrons < cut_expphe[0]) return -6;
+		if(vals->betaConsistency > cut_betaconsistency[0]) return -7;
 		if(max(abs(x),abs(y)) > cut_aerogel_nafborder[0]) return -8;
 	}
 	else
 	{
-		if(rich.getExpectedPhotoelectrons()<cut_expphe[1]) return -9;
-		if(rich.getBetaConsistency()>cut_betaconsistency[1]) return -10;
+		if(vals->expectedPhotoElectrons < cut_expphe[1]) return -9;
+		if(vals->betaConsistency > cut_betaconsistency[1]) return -10;
 		if(x*x+y*y			> cut_aerogelexternalborder) return -11;
 		if(max(abs(x),abs(y)) < cut_aerogel_nafborder[1]) return -12;
 		for(int kbad=0;kbad<nbadtiles;kbad++)
 		{
-			if(rich.getTileIndex()==kbadtile[kbad]) return -13;
+			if(vals->tileIndex == kbadtile[kbad]) return -13;
 		}
 	}
 	
-	if(RichHitR::getPMTs()-RichHitR::getPMTs(false)>1) return -14;
+	if(vals->richHit_PMTs - vals->richHit_PMTs_false > 1) return -14;
 	
 	return 1;
 }
