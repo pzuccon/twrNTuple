@@ -20,6 +20,7 @@
 #include "TrdSCalib.h"
 
 #include "twrNTuple.h"
+#include "resClassCommon.h"
 
 class twrNTupleFiller
 {

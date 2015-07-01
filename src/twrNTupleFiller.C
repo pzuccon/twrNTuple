@@ -345,10 +345,11 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	//pz	if (!trTr->TestHitLayerJHasXY(1)) return 7;
 	if (!trTr->TestHitLayerJ(1)) return 7;
 	
-	// Choutko algo. fit
-	twrNT.trFitCode = trTr->iTrTrackPar(1,3,0);
-	// chiKanian algo. fit
-	twrNT.trFitCode_K = trTr->iTrTrackPar(3,3,0);
+	// Choutko algo. fit (1); inner tracker only (3); force refit (2);
+	//   assume He4 mass; assume charge 2
+	twrNT.trFitCode = trTr->iTrTrackPar(1,3,2,mHe4,2);
+	// chiKanian algo. fit (3)
+	twrNT.trFitCode_K = trTr->iTrTrackPar(3,3,2,mHe4,2);
 	// Fit did not succeed.  (SHOULD NOT OCCUR)
 	if ((twrNT.trFitCode < 0)&&(twrNT.trFitCode_K < 0)) return 8;
 	
