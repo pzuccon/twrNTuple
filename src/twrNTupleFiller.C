@@ -394,20 +394,26 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 
 	if (twrNT.trFitCode >= 0)
 	{
+		TrTrackPar fit_C = trTr->gTrTrackPar(twrNT.trFitCode);
 		twrNT.rigInnerTr = float(trTr->GetRigidity(twrNT.trFitCode));
 		twrNT.rrErrInnerTr = float(trTr->GetErrRinv(twrNT.trFitCode));
 		twrNT.chiSqInnerTr = float(trTr->GetChisq(twrNT.trFitCode));
 		twrNT.normChisqY = float(trTr->GetNormChisqY(twrNT.trFitCode));
 		twrNT.normChisqX = float(trTr->GetNormChisqX(twrNT.trFitCode));
+		twrNT.bcorr = fit_C.Bcorr;
+		twrNT.bcorrFlag = fit_C.BcorrFlag;
 	}
 
 	if (twrNT.trFitCode_K >= 0)
 	{
+		TrTrackPar fit_K = trTr->gTrTrackPar(twrNT.trFitCode_K);
 		twrNT.rigInnerTr_K = float(trTr->GetRigidity(twrNT.trFitCode_K));
 		twrNT.rrErrInnerTr_K = float(trTr->GetErrRinv(twrNT.trFitCode_K));
 		twrNT.chiSqInnerTr_K = float(trTr->GetChisq(twrNT.trFitCode_K));
 		twrNT.normChisqY_K = float(trTr->GetNormChisqY(twrNT.trFitCode_K));
 		twrNT.normChisqX_K = float(trTr->GetNormChisqX(twrNT.trFitCode_K));
+		twrNT.bcorr_K = fit_K.Bcorr;
+		twrNT.bcorrFlag_K = fit_K.BcorrFlag;
 	}
 
 	RichRingR* richRing = par->pRichRing();

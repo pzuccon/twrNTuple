@@ -80,12 +80,16 @@ class twrNTuple: public TObject
 	float chiSqInnerTr; // Overall chi-squared associated with track fit
 	float normChisqY; // Chi-squared for Y tracker fit
 	float normChisqX;
+	float bcorr;
+	short int bcorrFlag;
 	// chiKanian tracker fit parameters
 	float rigInnerTr_K;
 	float rrErrInnerTr_K;
 	float chiSqInnerTr_K;
 	float normChisqY_K;
 	float normChisqX_K;
+	float bcorr_K;
+	short int bcorrFlag_K;
 	
 // === RICH quantities ===
 	int flagRich; // flagRich==1 iff RichRingR passes set of cuts supplied by J.Berdugo
