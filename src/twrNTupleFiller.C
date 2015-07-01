@@ -121,7 +121,15 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	// Decide how many events to loop through then start
 	int nEv = ch.GetEntries();
 	int nToUse;
-	AMSSetupR::RTI::UseLatest(6);
+
+// 	AMSSetupR::RTI::UseLatest(); // before pass6
+	AMSSetupR::RTI::UseLatest(6); // pass6 onward
+	
+	TkDBc::UseFinal();
+	TRMCFFKEY_DEF::ReadFromFile = 0;
+	TRFITFFKEY_DEF::ReadFromFile = 0;
+	TRFITFFKEY.magtemp = 1;  // pass6 only
+	
 	AMSEventR* ev0=ch.GetEvent();
 	if (maxEvents < 0) nToUse = nEv;
 	else nToUse = (maxEvents<nEv?maxEvents:nEv);
