@@ -50,9 +50,9 @@ public:
 	
 // 	int doPreselect(char* rootListFile, char* outNTupleFile = 0);
 // 	int doPreselect_separate_files(char* listFile, int nMaxFiles = -1);
-	int RichQC(RichRingR *prich);
+	int RichQC(twrRichQC *vals);
 	int fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev);
-	int highestRigParticle(AMSEventR* ev);
+	int highestRigParticle(AMSEventR* ev, int& nPar_wTrack);
 	
   //	ClassDef(twrNTupleFiller, 0);
 };

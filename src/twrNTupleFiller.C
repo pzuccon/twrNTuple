@@ -304,7 +304,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 {  
   
 
-  int hrPart = highestRigParticle(ev);
+  int hrPart = highestRigParticle(ev, nParticle_withTrack);
   // Problem finding the particle with the highest (absolute) rigidity.
   //    (This includes the case that there are no particles with an associated track.)
   if (hrPart<0) return 6;
@@ -429,11 +429,9 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 		//	twrNT.isNaF = richRing->IsNaF();
 	}
 	else
-	{
-		twrNT.flagRich = 0;	
+	{	
 		twrNT.betaRich = 0;
 		twrNT.betaRich_Err = 0;
-		
 		{
 			rich.IsGood = false;
 			rich.IsClean = false;
@@ -451,6 +449,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 			rich.richHit_PMTs = 0;
 			rich.richHit_PMTs_false = 0;
 		}
+		twrNT.flagRich = 0;
 // 		for (int k=0; k<5; k++) twrNT.richTrackEmPt[k] = 0;
 // 		twrNT.richDistanceTileBorder = 0;
 	}
@@ -481,18 +480,20 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	return 0;
 }
 
-int twrNTupleFiller::highestRigParticle(AMSEventR* ev)
+int twrNTupleFiller::highestRigParticle(AMSEventR* ev, int& nPar_wTrack)
 {
 	double maxRig = -1.;
 	int ret = -1;
 	
 	int nP = ev->nParticle();
+	nPar_wTrack = 0;
 	if (nP<1) return -1;
 	for (int j=0; j<nP; j++)
 	{
 		ParticleR* par = ev->pParticle(j);
 		int trInd = par->iTrTrack();
 		if (trInd == -1) continue;
+		nPar_wTrack++;
 		TrTrackR* trTr = par->pTrTrack();
 		
 		int fitCode = trTr->iTrTrackPar(0,3,0);
