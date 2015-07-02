@@ -24,7 +24,7 @@ class tt : public TSelector {
 public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
 //
-  HistoProofMan hman;
+  HistoProofManF hman;
    // Declaration of leaf types
  twrNTuple       *twrNT;
 

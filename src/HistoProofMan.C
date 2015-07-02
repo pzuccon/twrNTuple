@@ -9,11 +9,11 @@
 #include "TH3D.h"
 #include "TFile.h"
 #include "TROOT.h"
-ClassImp(threp);
+ClassImp(Fthrep);
 
   
 
-threp::threp(){
+Fthrep::Fthrep(){
   htype=knull;
   nbin[0]=0;
   nbin[1]=0;
@@ -21,11 +21,11 @@ threp::threp(){
  
 }
   
-threp::threp(const threp& orig){
+Fthrep::Fthrep(const Fthrep& orig){
   *this=orig;
 }
 
-threp& threp::operator=(const threp& orig){
+Fthrep& Fthrep::operator=(const Fthrep& orig){
   if(&orig==this)
     return *this;
   
@@ -45,7 +45,7 @@ threp& threp::operator=(const threp& orig){
 
 
 
-threp::threp(const TH1* hin){
+Fthrep::Fthrep(const TH1* hin){
   nbin[0]=0;
   nbin[1]=0;
   nbin[2]=0;
@@ -99,7 +99,7 @@ threp::threp(const TH1* hin){
 
 }
 
-threp::hkinds threp::getkind(const TH1* hin){
+Fthrep::hkinds Fthrep::getkind(const TH1* hin){
   std::string htyp=hin->ClassName();
   if( htyp=="TH1F")
     return kth1f;
@@ -122,7 +122,7 @@ threp::hkinds threp::getkind(const TH1* hin){
 }
 
 
-int threp::getdimension(){
+int Fthrep::getdimension(){
   if( 
      (htype==kth1f)||
      (htype==kth1d)||
@@ -146,7 +146,7 @@ int threp::getdimension(){
 
 
 
-TH1* threp::gethisto()const {
+TH1* Fthrep::gethisto()const {
 
 
   switch (htype){
@@ -214,9 +214,9 @@ TH1* threp::gethisto()const {
 
 }
 
-ClassImp(HistoProofMan);
+ClassImp(HistoProofManF);
 
-void HistoProofMan::Fill(const char * name, double a,double  b,double w){
+void HistoProofManF::Fill(const char * name, double a,double  b,double w){
 
   TH1*hist = Get(name);
   if(!hist){
@@ -242,7 +242,7 @@ void HistoProofMan::Fill(const char * name, double a,double  b,double w){
   return;
 }
 
-HistoProofMan::~HistoProofMan(){
+HistoProofManF::~HistoProofManF(){
   rlist.clear();
   // hashtable<TH1*>::iterator it;
 //   for( it=hlist.begin();it!=hlist.end();it++)
@@ -253,15 +253,15 @@ HistoProofMan::~HistoProofMan(){
 }
 
 
-void HistoProofMan::Add(TH1* hist ){
+void HistoProofManF::Add(TH1* hist ){
 
-  rlist.Add(hist->GetName(),threp(hist));
+  rlist.Add(hist->GetName(),Fthrep(hist));
   if(hist) 
     delete hist;
   return;
 
 }
-void HistoProofMan::Save(){
+void HistoProofManF::Save(){
 
   if(!fname[0])return;
   printf("HistoMan::Save ----> Saving %s\n",fname);
@@ -282,14 +282,14 @@ void HistoProofMan::Save(){
 }
 
 
-const threp* HistoProofMan::GetRep(const char* nn){
-  hashtable<threp>::const_iterator ll;
+const Fthrep* HistoProofManF::GetRep(const char* nn){
+  hashtable<Fthrep>::const_iterator ll;
   int ret=rlist.find(nn,ll);
   if(ret) return &(ll->second);
     else return 0;
 }
-TH1* HistoProofMan::GetNew(const char * name){
-    hashtable<threp>::const_iterator ll;
+TH1* HistoProofManF::GetNew(const char * name){
+    hashtable<Fthrep>::const_iterator ll;
     int ret=rlist.find(name,ll);
     if(ret)
       return ll->second.gethisto();
@@ -298,14 +298,14 @@ TH1* HistoProofMan::GetNew(const char * name){
   }
 
 
-void HistoProofMan::CreateHistos(){
-    hashtable<threp>::iterator it;
+void HistoProofManF::CreateHistos(){
+    hashtable<Fthrep>::iterator it;
     for( it=rlist.begin();it!=rlist.end();it++){
       AddH(it->second.gethisto());
     }
     return;
 } 
-TH1* HistoProofMan::Get(const char * name){
+TH1* HistoProofManF::Get(const char * name){
     hashtable<TH1*>::const_iterator hh;
     int ret=hlist.find(name,hh);
     if(ret) return hh->second;

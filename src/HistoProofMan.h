@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-class threp{
+class Fthrep{
 public:
   enum hkinds{knull,kth1f,kth2f,ktprofile,kth1d,kth2d,ktprofile2d,kth3f,kth3d};
   hkinds htype;
@@ -23,27 +23,27 @@ public:
   hkinds getkind(const TH1* hin);
   
 public:
-  threp();
-  threp(const TH1* hin);
-  threp(const threp& orig);
+  Fthrep();
+  Fthrep(const TH1* hin);
+  Fthrep(const Fthrep& orig);
   TH1* gethisto() const;
   
-  virtual ~threp(){}
-  threp& operator=(const threp& orig);
+  virtual ~Fthrep(){}
+  Fthrep& operator=(const Fthrep& orig);
 
-  ClassDef(threp,0);
+  ClassDef(Fthrep,0);
 
 };
 
-class HistoProofMan: public TObject{
+class HistoProofManF: public TObject{
 public:
-  hashtable<threp> rlist;
+  hashtable<Fthrep> rlist;
   hashtable<TH1*> hlist;
   char fname[200];  
 
 public:
-  HistoProofMan(const char * nam="HistoOut.root"){sprintf(fname,"%s",nam);}
-  ~HistoProofMan();
+  HistoProofManF(const char * nam="HistoOut.root"){sprintf(fname,"%s",nam);}
+  ~HistoProofManF();
   /// Add a new histogram
   void Add(TH1* hist );
   void Fill(const char * name, double a,double  b=1.,double w=1.);
@@ -52,7 +52,7 @@ public:
   void Save();
   
   TH1* Get(const char * name);
-  const threp* GetRep(const char* nn);  
+  const Fthrep* GetRep(const char* nn);  
   void AddH(TH1* hist ){hlist.Add(hist->GetName(),hist);}
   TH1* GetNew(const char * name);
   
@@ -61,7 +61,7 @@ public:
   
 
   
-  ClassDef(HistoProofMan,0);
+  ClassDef(HistoProofManF,0);
 };
 
 #endif

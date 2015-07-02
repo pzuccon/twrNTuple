@@ -143,7 +143,8 @@ Bool_t tt::Process(Long64_t entry)
 //       }
 //   }
  fChain->GetTree()->GetEntry(entry);
- ProcessEvent();
+ hman.Fill("rrTrTrack",log10(twrNT->rigInnerTr));
+ // ProcessEvent();
 
  
  return kTRUE;
@@ -177,13 +178,12 @@ void tt::Terminate()
 //===================================================================================
 
 void tt::BookHistos(){
- hman.Add(new TH1F("nTrTrack","Tracks",10,0,10));
+ hman.Add(new TH1F("rrTrTrack","Rig Tracks",50,-1,4));
   hman.Add(new TH2F("rr","rr",10,0,10.,100,0,1000));
 }
 
 
 void tt::ProcessEvent(){
 
-  hman.Fill("nTrTrack",twrNT->rigInnerTr);
-
+ 
 }

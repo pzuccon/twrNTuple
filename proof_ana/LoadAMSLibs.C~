@@ -2,17 +2,16 @@
   gROOT->Reset();
   
   // Set include path
-//	  gInterpreter->AddIncludePath(gSystem->ExpandPathName("$AMSSRC/include"));
-  
+  //	  gInterpreter->AddIncludePath(gSystem->ExpandPathName("$AMSSRC/include"));
+  TProof* p=TProof::Open("");
+  p->Load("../lib/libResTemp.so");
+  gInterpreter->AddIncludePath(gSystem->ExpandPathName("../src/"));
   // for loading AMSRoot libraries
- gROOT->ProcessLine(".L twrLevel1R.C+"); 
- 
- gROOT->ProcessLine(".L twrNTuple.C+"); 
- // gROOT->ProcessLine(".L ProcFileElements.C+"); 
- TChain aa("tt");
- aa.Add("/data1/DATA/twr_ntuples/v3/Data/mdb138*root");
- //aa.Process("ProofEventProc.C+","",10000);
- //gROOT->ProcessLine(".L BHist.C+"); 
- 
- //gROOT->ProcessLine(".L DHF.C+"); 
+  TChain aa("tt");
+  aa.Add("/data2/DATA/twr_ntuples/v4/Data/mdb13*root");
+  aa.SetProof();
+  aa.Process("myselector.C+","HistoOutBS2.root");
+  //gROOT->ProcessLine(".L BHist.C+"); 
+  
+  //gROOT->ProcessLine(".L DHF.C+"); 
 }
