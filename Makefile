@@ -15,7 +15,7 @@ endif
 CXX:=`root-config --cxx`
 
 # Flags used in compilation
-CPPFLAGS= -I$(SRC) -I$(ANATOOL_U) -I$(ANATOOL_L) -D_PGTRACK_ -D__ROOTSHAREDLIBRARY__ -Ilib -I$(AMSSRC)/include -I$(ROOTSYS)/include
+CPPFLAGS= -I$(SRC) -D_PGTRACK_ -D__ROOTSHAREDLIBRARY__ -Ilib -I$(AMSSRC)/include -I$(ROOTSYS)/include
 CXXFLAGS= $(DEBUGOPT) -fPIC -Wno-write-strings  $(CPPFLAGS)
 CFLAGS = $(DEBUGOPT)
 DEBUGOPT = -O3
@@ -28,8 +28,6 @@ AMSNTUPLELIB=ntuple_slc$(SLC_NO)_PG
 # These should also match the pragma statements in the linkdef.h file
 LIB_SRCS = $(SRC)resClassCommon.C $(SRC)HistoProofMan.C
 LIB_SRCS+= $(SRC)twrNTuple.C $(SRC)twrLevel1R.C $(SRC)twrRTI.C 
-#LIB_SRCS+= $(SRC)twrFetchedQuantities.C
-#LIB_SRCS+= $(SRC)absTemplate.C $(SRC)tf1Template.C $(SRC)massTemplate.C $(SRC)templateColl.C
 
 LIB_HEADS = $(LIB_SRCS:$(SRC)%.C=$(SRC)%.h)
 LIB_OBJS  = $(LIB_SRCS:$(SRC)%.C=$(BIN)%.o)
@@ -39,9 +37,6 @@ LIB_HEADS_BARE = $(LIB_HEADS:$(SRC)%=%)
 
 # Files not to be included in library (executables, ...)
 PROG_SRCS = $(SRC)processSingleFile.C
-#PROG_SRCS+= $(SRC)resClassTest.C
-#PROG_SRCS+= $(SRC)runAnalysis.C
-#PROG_SRCS+= $(SRC)fitDatFile_TWR.C
 
 PROGS = $(PROG_SRCS:$(SRC)%.C=%.out)
 
@@ -60,6 +55,7 @@ all: dirStructure lib prog
 	$(MAKE) -C sql
 
 all_clean: clean_lib dirStructure lib prog
+	$(MAKE) -C sql all_clean
 
 debug: DEBUGOPT=-g
 debug: all
@@ -97,10 +93,6 @@ $(BIN)ResTempDict.o: $(BIN)ResTempDict.C
 	@echo ">> Compiling dictionary $< ..."
 	$(CXX) -c $(CXXFLAGS) $< -o $@
 
-runAnalysis.out: $(SRC)runAnalysis.C anaTool
-	@echo ">> Making executable $< ..."
-	$(CXX) -o $@ $(CXXFLAGS) $< -L$(LIB) -lResTemp_a -L$(ANATOOL_L) -lToola -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
-
 test:
 	@echo $(LIB_SRCS)
 	@echo $(LIB_OBJS)
@@ -108,7 +100,7 @@ test:
 	@echo $(LIB_HEADS_BARE)
 	@echo $(PROGS)
 
-.PHONY: all all_clean prog lib dirStructure test clean clean_lib clean_ntuples debug debug_clean aTool
+.PHONY: all all_clean prog lib dirStructure test clean clean_lib clean_ntuples debug debug_clean
 
 # Cleanup routines
 clean:
