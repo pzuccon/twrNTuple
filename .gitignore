@@ -26,3 +26,11 @@
 *.exe
 *.out
 *.app
+
+# ##### ROOT-specific ignores #####
+# Dependency files generated automatically by ACLiC
+*_C.d
+
+# ROOTCINT dictionary files
+bin/*Dict.C
+bin/*Dict.h
