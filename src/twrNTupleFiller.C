@@ -391,7 +391,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	
 	twrNT.trPattern = trTr->GetBitPatternJ();
 	twrNT.trPatternXY = trTr->GetBitPatternXYJ();
-
+	
 	if (twrNT.trFitCode >= 0)
 	{
 		TrTrackPar fit_C = trTr->gTrTrackPar(twrNT.trFitCode);
@@ -403,7 +403,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 		twrNT.bcorr = fit_C.Bcorr;
 		twrNT.bcorrFlag = fit_C.BcorrFlag;
 	}
-
+	
 	if (twrNT.trFitCode_K >= 0)
 	{
 		TrTrackPar fit_K = trTr->gTrTrackPar(twrNT.trFitCode_K);
@@ -415,6 +415,14 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 		twrNT.bcorr_K = fit_K.Bcorr;
 		twrNT.bcorrFlag_K = fit_K.BcorrFlag;
 	}
+	
+	float bestRig=(twrNT.trFitCode>=0) ? twrNT.rigInnerTr : twrNT.rigInnerTr_K;
+	
+	twrNT.betaTof = betaH->GetBeta();
+	twrNT.betaTof_Err = betaH->GetEBetaV();
+	twrNT.betaSTof = betaH->GetBetaS();
+	twrNT.betaCTof = betaH->GetBetaC();
+	twrNT.betaCTof_Err = betaH->GetEBetaCV();
 
 	RichRingR* richRing = par->pRichRing();
 	if (richRing>0)
@@ -440,9 +448,14 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 			twrNT.rich.richHit_PMTs_false = RichHitR::getPMTs(false);
 		}
 		twrNT.flagRich = RichQC(&twrNT.rich);
-// 		for (int k=0; k<5; k++) twrNT.richTrackEmPt[k] = rtep[k];
-// 		twrNT.richDistanceTileBorder = float(richRing->DistanceTileBorder());
-		//	twrNT.isNaF = richRing->IsNaF();
+		
+		// For low rig. NaF events, require consistency with TOF beta
+		if (twrNT.flagRich==1 && twrNT.rich.IsNaF && bestRig<4.)
+		{
+			float bR = twrNT.betaRich;
+			float bT = twrNT.betaTof;
+			if (abs((bR-bT)/(bR+bT)) > 0.03) twrNT.flagRich=-15;
+		}
 	}
 	else
 	{	
@@ -469,12 +482,6 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 // 		for (int k=0; k<5; k++) twrNT.richTrackEmPt[k] = 0;
 // 		twrNT.richDistanceTileBorder = 0;
 	}
-
-	twrNT.betaTof = betaH->GetBeta();
-	twrNT.betaTof_Err = betaH->GetEBetaV();
-	twrNT.betaSTof = betaH->GetBetaS();
-	twrNT.betaCTof = betaH->GetBetaC();
-	twrNT.betaCTof_Err = betaH->GetEBetaCV();
 	
  	if (twrNT.isMC)
  	{
@@ -579,6 +586,8 @@ int twrNTupleFiller::RichQC(twrRichQC *vals)
 	}
 	
 	if(vals->richHit_PMTs - vals->richHit_PMTs_false > 1) return -14;
+	
+	// flagRich=-15 (set later) if low-rig. NaF event and inconsistent TOF beta
 	
 	return 1;
 }
