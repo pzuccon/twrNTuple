@@ -11,6 +11,8 @@
 #pragma link C++ class twrLevel1R+;
 #pragma link C++ class twrRTI+;
 #pragma link C++ class twrNTuple+;
+#pragma link C++ class twrTrdK+;
+#pragma link C++ class twrTrdKHit+;
 #pragma link C++ class Fthrep+;
 #pragma link C++ class HistoProofManF+;
 

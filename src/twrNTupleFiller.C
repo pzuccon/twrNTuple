@@ -1,5 +1,159 @@
 #include "twrNTupleFiller.h"
+#include "twrTrdK.h"
+#include "TrdKCluster.h"
 
+
+void FilltwrTrdKHit( twrTrdKHit* mhit,TrdKHit* hit){
+
+  AMSPoint pnt;
+  AMSDir dir;
+
+  mhit->tube_lenght=hit->Tube_Track_3DLength(&pnt,&dir);
+ 
+
+  
+  mhit->Time=hit->Time;
+  mhit->TRDHit_Amp=hit->TRDHit_Amp;
+  mhit->TRDHit_GainCorrection=hit->TRDHit_GainCorrection;
+  mhit->TRDHit_Layer=hit->TRDHit_Layer;
+  mhit->TRDHit_Ladder=hit->TRDHit_Ladder;
+  mhit->tubeid=hit->tubeid;
+  mhit->TRDHit_x=hit->TRDHit_x;
+  mhit->TRDHit_y=hit->TRDHit_y;
+  mhit->TRDHit_z=hit->TRDHit_z;
+  mhit->TRDHit_TRDTrack_x=hit->TRDHit_TRDTrack_x;
+  mhit->TRDHit_TRDTrack_y=hit->TRDHit_TRDTrack_y;
+  mhit->TRDHit_TRDTrack_z=hit->TRDHit_TRDTrack_z;
+
+  for (int ii=0;ii<3;ii++){
+    mhit->TRDTube_Center[ii]=hit->TRDTube_Center[ii];
+    mhit->TRDTube_Dir[ii]=hit->TRDTube_Dir[ii];
+  }
+
+}
+
+
+Bool_t FillTrdK(AMSEventR* pev,ParticleR* part, twrTrdK* tdk){
+
+  
+  TrdTrackR *trdtrack=pev->pTrdTrack(part->iTrdTrack());
+  TrTrackR *trk=pev->pTrTrack(part->iTrTrack());
+  if(trdtrack){
+    tdk->ntrdseg=trdtrack->NTrdSegment();
+    for (int ss=0;ss<tdk->ntrdseg;ss++)
+      tdk->nlay+=trdtrack->pTrdSegment(ss)->NTrdCluster();
+    //---TrdTrack Match
+    AMSDir dir;AMSPoint pos;
+    
+    if(trk){
+      trk->Interpolate(trdtrack->Coo[2],pos,dir);
+      tdk->distrd[0]=trdtrack->Coo[0]-pos.x();
+      tdk->distrd[1]=trdtrack->Coo[1]-pos.y();
+      AMSDir trddir(trdtrack->Theta,trdtrack->Phi);
+      tdk->distrd[2]=acos(fabs(trddir.prod(dir)))*180/3.1415926;
+    }
+  }
+
+  //---TrdTrack-Default-Charge
+  ChargeR *charge=pev->pCharge(part->iCharge());
+  if(charge){
+    ChargeSubDR *zTrd=charge->getSubD("AMSChargeTRD");
+    if(zTrd){
+      tdk->trd_rz = TMath::Max(Int_t(zTrd->ChargeI[0]),1);
+      tdk->trd_rq = zTrd->Q;
+      tdk->trd_rpz= zTrd->getProb();
+    }
+  }
+
+ 
+  //-----TrdK
+  //  for(int i=0;i<20;i++){trd_amplk[i]=trd_pathlk[i]=0;}
+
+
+  if(!trk)return false;
+  //---
+
+
+  float ecalen=0;
+  EcalShowerR *show= pev->pEcalShower(part->iEcalShower());
+  if(show){ecalen=show->EnergyE;}
+  bool ecalpar=(ecalen>1);
+
+
+  //---
+  //---Track
+  tdk->fid=trk->iTrTrackPar(1,5,2); // Get any prefered fit code
+
+  double trdlikr[3]={-1,-1,-1},trdlikre[3]={-1,-1,-1},trdlik[3]={-1,-1,-1}; //LikelihoodRatio :  e/P, e/H, P/H
+
+  //int NHits=0;  //number of hits in Likelihood Calculation
+
+  float threshold=15;  //ADC above will be taken into account in Likelihood Calculation
+
+  TrdKCluster trdcluster=TrdKCluster(pev,trk,tdk->fid);
+
+  tdk->IsReadAlignmentOK=trdcluster.IsReadAlignmentOK; //0: No Alignment, 1: Static Alignment Layer level,  2: Dynamic
+  tdk->IsReadCalibOK=trdcluster.IsReadCalibOK;  // 0: No Gain Calibration, 1: Gain Calibration Succeeded
+
+  if(tdk->IsReadAlignmentOK==0||tdk->IsReadCalibOK==0){tdk->trd_statk=-200;} 
+  else                                      {tdk->trd_statk=-100;}
+  if(tdk->trd_statk!=-100)return false;
+
+  tdk->trd_statk=trdcluster.GetLikelihoodRatio_TrTrack(threshold,tdk->trd_likr,tdk->NHits);//Track=1
+ 
+  trdcluster.GetOffTrackHit_TrTrack(tdk->trd_onhitk,tdk->trd_oampk);
+
+  if(tdk->trd_statk!=1){
+    tdk->trd_statk=trdcluster.GetLikelihoodRatio_TRDRefit(threshold,tdk->trd_likr,tdk->NHits);
+    if(tdk->trd_statk==1)tdk->trd_statk+=10;//TRD=11
+    trdcluster.GetOffTrackHit_TRDRefit(tdk->trd_onhitk,tdk->trd_oampk);
+  }
+  // trd_nhitk=NHits;//Number of surrounding fired tubes
+  if(tdk->trd_statk%10==1){//trd_statk=1 || trd_statk=11
+    if(ecalpar){
+      if(tdk->trd_statk==1)trdcluster.GetLikelihoodRatio_TrTrack(threshold,trdlikre,tdk->NHits,ecalen,trdlik);
+      else            trdcluster.GetLikelihoodRatio_TRDRefit(threshold,trdlikre,tdk->NHits,ecalen,trdlik);
+    }
+    for(int i=0;i<3;i++){tdk->trd_lik[i]=trdlikr[i];tdk->trd_likre[i]=trdlikre[i];}
+    AMSPoint pnt; AMSDir dir;
+    int x= trdcluster.GetTrTrackExtrapolation(pnt,dir);
+    if(x>=0){
+      for(int i=0;i<tdk->NHits;i++){
+	TrdKHit *hit=trdcluster.GetHit(i);
+	if(!hit)continue;
+	twrTrdKHit mtdhit;
+	FilltwrTrdKHit( &mtdhit,hit);
+	tdk->hits.push_back(mtdhit);
+      }
+    }
+  }
+  ///TRD-Charge
+    trdcluster.CalculateTRDCharge(0,part->pBetaH()->GetBeta());
+    tdk->trd_qk[0]=   trdcluster.GetTRDCharge();
+    tdk->trd_qk[1]=   trdcluster.GetTRDChargeUpper();
+    tdk->trd_qk[2]=   trdcluster.GetTRDChargeLower();
+    tdk->trd_qrmsk[0]=trdcluster.GetTRDChargeError();
+    tdk->trd_qnhk[0]= trdcluster.GetQNHit();
+    tdk->trd_qnhk[1]= trdcluster.GetQNHitUpper();
+    tdk->trd_qnhk[2]= trdcluster.GetQNHitLower();
+    tdk->trd_ipch=    trdcluster.GetIPChi2();//impact Chis
+
+    ///--End Fragmentation delta
+      trdcluster.CalculateTRDCharge(1,part->pBetaH()->GetBeta());
+      tdk->trd_qk[3]=   trdcluster.GetTRDCharge();
+      tdk->trd_qrmsk[1]=trdcluster.GetTRDChargeError();
+      trdcluster.CalculateTRDCharge(2,part->pBetaH()->GetBeta());
+      tdk->trd_qk[4]=   trdcluster.GetTRDCharge();
+      tdk->trd_qrmsk[2]=trdcluster.GetTRDChargeError();
+
+
+
+      return true;
+}
+
+
+
+Bool_t FillTrdK(AMSEventR* pev,ParticleR* part, twrTrdK* tdk);
 //ClassImp(twrNTupleFiller);
 static void cloneRTI(twrRTI & dest,  AMSSetupR::RTI& orig){
 
@@ -475,7 +629,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	twrNT.betaSTof = betaH->GetBetaS();
 	twrNT.betaCTof = betaH->GetBetaC();
 	twrNT.betaCTof_Err = betaH->GetEBetaCV();
-	
+	FillTrdK(ev,ev->pParticle(0), &(twrNT.trdk));
  	if (twrNT.isMC)
  	{
 	  //if (ev->nMCEventg() < 1) return 14;

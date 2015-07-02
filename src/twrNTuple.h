@@ -4,6 +4,7 @@
 #include "TObject.h"
 #include "twrLevel1R.h"
 #include "twrRTI.h"
+#include "twrTrdK.h"
 
 // Structure used for variables used in RICH quality cuts
 struct twrRichQC
@@ -45,7 +46,7 @@ class twrNTuple: public TObject
 	twrRTI     RTI;
 	
 	twrRichQC rich; // Values used for RICH quality cuts
-
+        twrTrdK   trdk;
 // === Basics about event ===
 	unsigned int Event;
 	unsigned int Run;
