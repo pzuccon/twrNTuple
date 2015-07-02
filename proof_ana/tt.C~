@@ -30,11 +30,9 @@
 
 
 
-tt::tt(TTree * /*tree*/) : fChain(0),twrNT(0),fPtHist(0),fPzHist(0),fPxPyHist(0) { 
+tt::tt(TTree * /*tree*/) : fChain(0),twrNT(0) { 
 
-  hman.Add(new TH1F("nTrTrack","Tracks",10,0,10));
-  hman.Add(new TH2F("rr","rr",10,0,10.,100,0,1000));
-
+  BookHistos();
 
 }
 
@@ -86,7 +84,9 @@ void tt::Begin(TTree * /*tree*/)
    // The tree argument is deprecated (on PROOF 0 is passed).
 
    TString option = GetOption();
- Info("Begin", "starting a simple exercise with process option: %s", option.Data());
+   if(option.Length()>0)
+     hman.SetOutputName(option.Data());
+   Info("Begin", "starting a simple exercise with process option: %s", option.Data());
 }
 
 void tt::SlaveBegin(TTree * /*tree*/)
@@ -98,27 +98,7 @@ void tt::SlaveBegin(TTree * /*tree*/)
 
    TString option = GetOption();
    Info("SlaveBegin", "'%s' reading", "full");
-
-   fPtHist = new TH1F("pt_dist","p_{T} Distribution",100,0,5);
-   fPtHist->SetDirectory(0);
-   fPtHist->GetXaxis()->SetTitle("p_{T}");
-   fPtHist->GetYaxis()->SetTitle("dN/p_{T}dp_{T}");
-
-   fOutput->Add(fPtHist);
-
-   fPzHist = new TH1F("pz_dist","p_{Z} Distribution",100,0,5.);
-   fPzHist->SetDirectory(0);
-   fPzHist->GetXaxis()->SetTitle("p_{Z}");
-   fPzHist->GetYaxis()->SetTitle("dN/dp_{Z}");
-
-   fOutput->Add(fPzHist);
-
-   fPxPyHist = new TH2F("px_py","p_{X} vs p_{Y} Distribution",100,-5.,5.,100,-5.,5.);
-   fPxPyHist->SetDirectory(0);
-   fPxPyHist->GetXaxis()->SetTitle("p_{X}");
-   fPxPyHist->GetYaxis()->SetTitle("p_{Y}");
-
-   fOutput->Add(fPxPyHist);
+  
    hman.CreateHistos();
    printf("B ------>  %d %d\n", hman.hlist.size(),hman.rlist.size());
    hashtable<TH1*>::iterator it;
@@ -163,14 +143,8 @@ Bool_t tt::Process(Long64_t entry)
 //       }
 //   }
  fChain->GetTree()->GetEntry(entry);
- //printf("PROCESS CLASS NAME %s\n",fChain->ClassName());
-//  myChain* ch=(myChain*)fChain;
-//  twrNT=ch->GetEventPointer();
+ ProcessEvent();
 
- //printf("QU0QU0\n");
- //printf("Val---> %d  %x  %x %f  \n",entry,twrNT,fPzHist,twrNT->chiSqInnerTr);
- fPzHist->Fill(twrNT->chiSqInnerTr);
- hman.Fill("nTrTrack",twrNT->rigInnerTr);
  
  return kTRUE;
 }
@@ -196,6 +170,20 @@ void tt::Terminate()
     if(hman.GetRep(hh->GetName())) hman.AddH(hh);
   }
   printf(" ------>  %d %d\n", hman.hlist.size(),hman.rlist.size());
-  hman.Get("nTrTrack")->Draw();
   hman.Save();
+}
+//===================================================================================
+//===================================================================================
+//===================================================================================
+
+void tt::BookHistos(){
+ hman.Add(new TH1F("nTrTrack","Tracks",10,0,10));
+  hman.Add(new TH2F("rr","rr",10,0,10.,100,0,1000));
+}
+
+
+void tt::ProcessEvent(){
+
+  hman.Fill("nTrTrack",twrNT->rigInnerTr);
+
 }

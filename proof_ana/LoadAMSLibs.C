@@ -8,9 +8,9 @@
   gInterpreter->AddIncludePath(gSystem->ExpandPathName("../src/"));
   // for loading AMSRoot libraries
   TChain aa("tt");
-  aa.Add("/data1/DATA/twr_ntuples/v3/Data/mdb138*root");
+  aa.Add("/data2/DATA/twr_ntuples/v4/Data/mdb13*root");
   aa.SetProof();
-  //aa.Process("ProofEventProc.C+","",10000);
+  aa.Process("myselector.C+","HistoOutBS2.root");
   //gROOT->ProcessLine(".L BHist.C+"); 
   
   //gROOT->ProcessLine(".L DHF.C+"); 
