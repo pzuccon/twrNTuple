@@ -584,27 +584,27 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 		twrNT.betaRich = richRing->getBeta();
 		twrNT.betaRich_Err = richRing->getBetaError();
 		{
-			twrNT.rich.IsGood = richRing->IsGood();
-			twrNT.rich.IsClean = richRing->IsClean();
-			twrNT.rich.IsNaF = richRing->IsNaF();
-			twrNT.rich.prob = richRing->getProb();
-			twrNT.rich.PMTs = richRing->getPMTs();
-			twrNT.rich.photoElectrons = richRing->getPhotoElectrons();
-			twrNT.rich.collectedPhotoElectrons = RichHitR::getCollectedPhotoElectrons();
-			twrNT.rich.PMTChargeConsistency = richRing->getPMTChargeConsistency();
+			twrNT.richQual.IsGood = richRing->IsGood();
+			twrNT.richQual.IsClean = richRing->IsClean();
+			twrNT.richQual.IsNaF = richRing->IsNaF();
+			twrNT.richQual.prob = richRing->getProb();
+			twrNT.richQual.PMTs = richRing->getPMTs();
+			twrNT.richQual.photoElectrons = richRing->getPhotoElectrons();
+			twrNT.richQual.collectedPhotoElectrons = RichHitR::getCollectedPhotoElectrons();
+			twrNT.richQual.PMTChargeConsistency = richRing->getPMTChargeConsistency();
 			const float* rtep = richRing->getTrackEmissionPoint();
-			for (int i=0; i<5; i++) twrNT.rich.trackEmPt[i] = rtep[i];
-			twrNT.rich.expectedPhotoElectrons = richRing->getExpectedPhotoelectrons();
-			twrNT.rich.betaConsistency = richRing->getBetaConsistency();
-			twrNT.rich.tileIndex = richRing->getTileIndex();
-			twrNT.rich.distanceTileBorder = richRing->DistanceTileBorder();
-			twrNT.rich.richHit_PMTs = RichHitR::getPMTs();
-			twrNT.rich.richHit_PMTs_false = RichHitR::getPMTs(false);
+			for (int i=0; i<5; i++) twrNT.richQual.trackEmPt[i] = rtep[i];
+			twrNT.richQual.expectedPhotoElectrons = richRing->getExpectedPhotoelectrons();
+			twrNT.richQual.betaConsistency = richRing->getBetaConsistency();
+			twrNT.richQual.tileIndex = richRing->getTileIndex();
+			twrNT.richQual.distanceTileBorder = richRing->DistanceTileBorder();
+			twrNT.richQual.richHit_PMTs = RichHitR::getPMTs();
+			twrNT.richQual.richHit_PMTs_false = RichHitR::getPMTs(false);
 		}
-		twrNT.flagRich = RichQC(&twrNT.rich);
+		twrNT.flagRich = RichQC(&twrNT.richQual);
 		
 		// For low rig. NaF events, require consistency with TOF beta
-		if (twrNT.flagRich==1 && twrNT.rich.IsNaF && bestRig<4.)
+		if (twrNT.flagRich==1 && twrNT.richQual.IsNaF && bestRig<4.)
 		{
 			float bR = twrNT.betaRich;
 			float bT = twrNT.betaTof;
@@ -615,23 +615,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	{	
 		twrNT.betaRich = 0;
 		twrNT.betaRich_Err = 0;
-		{
-			twrNT.rich.IsGood = false;
-			twrNT.rich.IsClean = false;
-			twrNT.rich.IsNaF = false;
-			twrNT.rich.prob = 0.;
-			twrNT.rich.PMTs = 0;
-			twrNT.rich.photoElectrons = 0.;
-			twrNT.rich.collectedPhotoElectrons = 0.;
-			twrNT.rich.PMTChargeConsistency = 0.;
-			for (int i=0; i<5; i++) twrNT.rich.trackEmPt[i] = 0.;
-			twrNT.rich.expectedPhotoElectrons = 0.;
-			twrNT.rich.betaConsistency = 0.;
-			twrNT.rich.tileIndex = 0;
-			twrNT.rich.distanceTileBorder = 0.;
-			twrNT.rich.richHit_PMTs = 0;
-			twrNT.rich.richHit_PMTs_false = 0;
-		}
+		twrNT.richQual.Clear();
 		twrNT.flagRich = 0;
 // 		for (int k=0; k<5; k++) twrNT.richTrackEmPt[k] = 0;
 // 		twrNT.richDistanceTileBorder = 0;
@@ -691,7 +675,7 @@ int twrNTupleFiller::highestRigParticle(AMSEventR* ev, int& nPar_wTrack)
 	return ret;
 }
 
-int twrNTupleFiller::RichQC(twrRichQC *vals)
+int twrNTupleFiller::RichQC(twrRichQuality *vals)
 // Rich quality cuts, as provided by J. Berdugo
 // Return 1 if object passes all cuts.  Return negative value of first cut not met otherwise.
 {

@@ -5,31 +5,8 @@
 #include "twrLevel1R.h"
 #include "twrRTI.h"
 #include "twrTrdK.h"
+#include "twrRichQuality.h"
 
-// Structure used for variables used in RICH quality cuts
-struct twrRichQC
-{
-	float prob; // Kolmogorov test probability for ring
-	int PMTs; // Number of PMTs
-	float photoElectrons; // # of PEs in ring
-	float collectedPhotoElectrons; // total # of PEs in event (from RichHitR)
-	float PMTChargeConsistency; // An index that indicates the level of consistency for
-								// hit/PMT charge consistency test (?)
-	float trackEmPt[5]; // coordinates of track extrapolation to RICH radiator,
-						// as used in reconstruction
-	float expectedPhotoElectrons; // Expected number of PEs ...
-	float betaConsistency; // Consistency between beta_LIP and beta_CIEMAT
-	int tileIndex; // Index of the tile the particle passed through
-	float distanceTileBorder;
-	
-	// RichHitR::getPMTs(), RichHitR::getPMTs(false)
-	// true is the default value of this function's argument
-	int richHit_PMTs, richHit_PMTs_false;
-	
-	bool IsGood; // RichRingR::IsGood()
-	bool IsClean; // RichRingR::IsClean()
-	bool IsNaF; // RichRingR::IsNaF()
-};
 
 // Variables fetched by ProcessEvent(), put into a class
 class twrNTuple: public TObject
@@ -44,9 +21,9 @@ class twrNTuple: public TObject
 // === Associated classes ===
 	twrLevel1R lvl1;
 	twrRTI     RTI;
-	
-	twrRichQC rich; // Values used for RICH quality cuts
-        twrTrdK   trdk;
+	twrRichQuality richQual; // Values used for RICH quality cuts
+    twrTrdK   trdk;
+    
 // === Basics about event ===
 	unsigned int Event;
 	unsigned int Run;

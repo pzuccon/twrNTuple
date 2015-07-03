@@ -52,7 +52,7 @@ public:
 	
 // 	int doPreselect(char* rootListFile, char* outNTupleFile = 0);
 // 	int doPreselect_separate_files(char* listFile, int nMaxFiles = -1);
-	int RichQC(twrRichQC *vals);
+	int RichQC(twrRichQuality *vals);
 	int fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev);
 	int highestRigParticle(AMSEventR* ev, int& nPar_wTrack);
 	
