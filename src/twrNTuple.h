@@ -134,7 +134,7 @@ class twrNTuple: public TObject
 	bool posMomentum() {return bool(1 & (fStatus>>34));}
 	bool isNaF() {return bool(1 & (fStatus>>52));}
 
-	ClassDef(twrNTuple, 4);
+	ClassDef(twrNTuple, 5);
 };
 
 #endif
