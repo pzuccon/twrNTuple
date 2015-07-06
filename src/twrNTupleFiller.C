@@ -8,7 +8,7 @@ void FilltwrTrdKHit( twrTrdKHit* mhit,TrdKHit* hit){
   AMSPoint pnt;
   AMSDir dir;
 
-  mhit->tube_lenght=hit->Tube_Track_3DLength(&pnt,&dir);
+  mhit->tube_length=hit->Tube_Track_3DLength(&pnt,&dir);
  
 
   

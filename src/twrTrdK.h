@@ -20,7 +20,7 @@ public:
   double 	TRDTube_Center[3];
   double 	TRDTube_Dir[3];
 
-  double tube_lenght;
+  double tube_length;
   twrTrdKHit(){Clear();}
   virtual ~twrTrdKHit(){}
 
@@ -99,7 +99,7 @@ void twrTrdKHit::Clear(){
     TRDTube_Center[ii]=0;
     TRDTube_Dir[ii]=0;
   }
-  tube_lenght=0;
+  tube_length=0;
 }
 
 
