@@ -18,7 +18,7 @@ CXX:=`root-config --cxx`
 CPPFLAGS= -I$(SRC) -D_PGTRACK_ -D__ROOTSHAREDLIBRARY__ -Ilib -I$(AMSSRC)/include -I$(ROOTSYS)/include
 CXXFLAGS= $(DEBUGOPT) -fPIC -Wno-write-strings  $(CPPFLAGS)
 CFLAGS = $(DEBUGOPT)
-DEBUGOPT = -O3
+DEBUGOPT = -g 
 SLC_NO=6
 # if test -z "$$SLC_NO"; then SLC_NO="6"; echo "SLC_NO environment variable not set.  Using default value of SLC_NO=6."; fi;
 AMSNTUPLELIB=ntuple_slc$(SLC_NO)_PG
@@ -27,7 +27,7 @@ AMSNTUPLELIB=ntuple_slc$(SLC_NO)_PG
 # Files to be included in library (classes & common functions); each should have a corresponding header file.
 # These should also match the pragma statements in the linkdef.h file
 LIB_SRCS = $(SRC)resClassCommon.C $(SRC)HistoProofMan.C
-LIB_SRCS+= $(SRC)twrNTuple.C $(SRC)twrLevel1R.C $(SRC)twrRTI.C $(SRC)twrTrdK.C $(SRC)twrRichQuality.C  
+LIB_SRCS+= $(SRC)twrNTuple.C $(SRC)twrLevel1R.C $(SRC)twrRTI.C $(SRC)twrTrdK.C $(SRC)twrTrdKHit.C $(SRC)twrRichQuality.C  
 
 LIB_HEADS = $(LIB_SRCS:$(SRC)%.C=$(SRC)%.h)
 LIB_OBJS  = $(LIB_SRCS:$(SRC)%.C=$(BIN)%.o)
@@ -66,7 +66,7 @@ debug_clean: all_clean
 prog: processSingleFile.out
 
 
-processSingleFile.out: $(BIN)twrNTupleFiller.o $(BIN)processSingleFile.o  $(LIB)libResTemp_a.a
+processSingleFile.out: $(BIN)twrNTupleFiller.o $(BIN)processSingleFile.o  $(LIB)libResTemp_a.a 
 	@echo ">> Making executable $@ ..."
 	$(CXX) -o $@ $^ $(CXXFLAGS) -L$(LIB) -lResTemp_a -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
 

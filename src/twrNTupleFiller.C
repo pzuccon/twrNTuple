@@ -121,9 +121,9 @@ Bool_t FillTrdK(AMSEventR* pev,ParticleR* part, twrTrdK* tdk){
       for(int i=0;i<tdk->NHits;i++){
 	TrdKHit *hit=trdcluster.GetHit(i);
 	if(!hit)continue;
-	twrTrdKHit mtdhit;
-	FilltwrTrdKHit( &mtdhit,hit);
-	tdk->hits.push_back(mtdhit);
+	twrTrdKHit *mtdhit=new twrTrdKHit();
+	FilltwrTrdKHit( mtdhit,hit);
+	tdk->mhits.push_back(mtdhit);
       }
     }
   }
@@ -153,7 +153,7 @@ Bool_t FillTrdK(AMSEventR* pev,ParticleR* part, twrTrdK* tdk){
 
 
 
-Bool_t FillTrdK(AMSEventR* pev,ParticleR* part, twrTrdK* tdk);
+
 //ClassImp(twrNTupleFiller);
 static void cloneRTI(twrRTI & dest,  AMSSetupR::RTI& orig){
 
@@ -466,7 +466,7 @@ int twrNTupleFiller::doPreselect_separate_files(char* listFile, int nMaxFiles)
 int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 {  
   
-
+  twrNT.trdk.Clear();
   int hrPart = highestRigParticle(ev, twrNT.nParticle_withTrack);
   // Problem finding the particle with the highest (absolute) rigidity.
   //    (This includes the case that there are no particles with an associated track.)
