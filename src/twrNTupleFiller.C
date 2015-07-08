@@ -336,156 +336,34 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	return 0;
 }
 
-
-
-/*
-int twrNTupleFiller::doPreselect(char* rootListFile, char* outNTupleFile)
-{
-	AMSChain ch;
-	
-	// Compose and display full output filename
-	char outF[256];
-	if (outNTupleFile == 0) sprintf(outF,"%stwr%s",outNTuplePath,rootListFile);
-	else sprintf(outF,"%s%s",outNTuplePath,outNTupleFile);
-	
-	// Decide whether we're looking at a single data file or a text file containing a list of data files
-	int addOK;
-	bool addBool;
-	if (isFileType(rootListFile,".root"))
-	{
-		char tmpF[256];
- 		sprintf(tmpF,"%s%s",inDataPath,rootListFile);
- 		addOK = ch.Add(tmpF);
-		printf("Loading single AMS data file: %s\n  > Status=%d\n",rootListFile,addOK);
-		addBool=(addOK>0)?true:false;
-		printf("Status: %d | Number of entries in AMSChain: %d\n",addOK,ch.GetEntries());
-	}
-	else
-	{
-		addOK = ch.AddFromFile(rootListFile,0,nMaxToProcess,true);
-		printf("Loading list of AMS ROOT files: %s\n  > Status=%d\n",rootListFile,addOK);
-		addBool=(addOK==0)?true:false;
-	}
-//	int addOK = ch.Add("root://eosams.cern.ch//eos/ams/Data/AMS02/2011B/ISS.B620/pass4/1378000368.00000001.root");
-	// TODO: Fix this
-	if (!ch.GetEntries()) {printf("ERROR processing input data file(s)--ABORT doPreselect()\n"); return addOK;}
-	printf("Number of entries loaded: %d\n",ch.GetEntries());
-	
-	// Open output file and tree for n-tuples
-	TFile* tf = new TFile(outF, "RECREATE");
-	if (!tf->IsOpen())
-	{
-		printf("ERROR opening output TFile:%s--ABORT doPreselect()\n",outF);
-		if (tf) {delete tf; tf=0;}
-		return -10;
-	}
-	
-	TTree* tt = new TTree("tt","Preselected n-tuple events for He isotope analysis.");
-	tt->Branch("twrNT","twrNTuple",&nt,0);
-
-	// Execute this once before working with RICH data
-	RichRingR::setBetaCorrection( RichRingR::fullUniformityCorrection );
-
-	// Bookkeeping for cut acceptances
-	int nCuts = 16;
-	nCuts++;
-	int accumCuts[nCuts];
-	for (int i=0; i<nCuts; i++) accumCuts[i]=0;
-
-	// Decide how many events to loop through then start
-	int nEv = ch.GetEntries();
-	int nToUse = (nMaxToProcess<nEv?nMaxToProcess:nEv);
-	for (int i = 0; i < nToUse;i++)
-	{
-		if (i%5000==0) printf("Processed %9d out of %9d (preselect)\n",i,nToUse);
-		AMSEventR* ev = ch.GetEvent(i);
-		int procRet = fillNTuple_preselect(nt, ev);
-//		printf("ev%d: %d\n",i,procRet);
-		if (procRet==0) tt->Fill();
-		if (procRet<nCuts) accumCuts[procRet]++;
-//		hman.Fill("ProcessEventRet",procRet);
-//		if (stop==1) break;
-	}
-	
-	printf("FINISHED processing %9d events\n",nToUse);
-
-	// Process histograms that track cuts and acceptances
-	char hTit[100];
-	sprintf(hTit,"Preselect return value for %d events",nToUse);
-	TH1I* h_returnVal = new TH1I("h_returnVal",hTit,nCuts,0,nCuts);
-	for (int i=0; i<nCuts; i++) h_returnVal->Fill(i,accumCuts[i]);
-	h_returnVal->GetXaxis()->SetTitle("Return (cut # or 0 if all cuts passed)");
-	h_returnVal->GetYaxis()->SetTitle("Events");
-	h_returnVal->SetStats(false);
-
-	sprintf(hTit,"Preselection acceptance based on %d original events",nToUse);
-	TH1I* h_preselect = new TH1I("h_preselect",hTit,nCuts,0,nCuts);
-	for (int i=1; i<nCuts; i++)
-	{
-		for (int j=0; j<i; j++) h_preselect->Fill(j,accumCuts[i]);
-	}
-	for (int j=0; j<nCuts; j++) h_preselect->Fill(j,accumCuts[0]);
-	h_preselect->GetXaxis()->SetTitle("Cut #");
-	h_preselect->GetYaxis()->SetTitle("Events remaining");
-	h_preselect->SetStats(false);
-	tf->cd();
-//	gDirectory->pwd();
-    printf("Output directed to: %s",gDirectory->GetPath());
-    h_returnVal->Write();
-	h_preselect->Write();
-	
-	// Write file; wrap up
-	tf->Write();
-	printf("Output n-tuple file will be found at %s\n",outF);
-//	hman.Save();
-
-	return 0;
-}
-
-int twrNTupleFiller::doPreselect_separate_files(char* listFile, int nMaxFiles)
-{
-	ifstream ifs(listFile);
-	if (!ifs.is_open()) {printf("ERROR opening list file\n"); return -20;}
-	char line[30];
-	//char fullRootFile[256];
-	int ret1, retAll = 0, nf = 0;
-	//	while ( (ifs.getline(line,30)) && (nf<nMaxFiles) )
-	while ( (ifs.getline(line,30)) && ((nf<nMaxFiles) || (nMaxFiles<0)) )
-	{
-		nf++;
-		//sprintf(fullRootFile,"%s%s",inDataPath,line);
-		//ret1 = doPreselect(fullRootFile,outNTuplePath);
-		ret1 = doPreselect(line);
-		if (ret1 != 0) ++retAll;	
-	}
-	// Return the number of .root files that have failed (0=all successful)
-	return retAll;
-}
-*/
-
 int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 {  
   
-  twrNT.trdk.Clear();
-  int hrPart = highestRigParticle(ev, twrNT.nParticle_withTrack);
-  // Problem finding the particle with the highest (absolute) rigidity.
-  //    (This includes the case that there are no particles with an associated track.)
-  if (hrPart<0) return 6;
-  
-  twrNT.isMC = ((ev->nMCEventg()>0)?true:false);
+//   twrNT.trdk.Clear(); // Overall "Clear" takes care of this.
+	twrNT.Clear();
+	
+	int errRet=0;
+	
+	int hrPart = highestRigParticle(ev, twrNT.nParticle_withTrack);
+	// Problem finding the particle with the highest (absolute) rigidity.
+	//    (This includes the case that there are no particles with an associated track.)
+	errRet++; if (hrPart<0) return errRet; // CUT 1
+
+	twrNT.isMC = ((ev->nMCEventg()>0)?true:false);
 
 	if (!twrNT.isMC)
 	{
 //		RTI cuts
 		int rtiRet = ev->GetRTI(rti);
-		if (rtiRet != 0) return 1;
+		errRet++; if (rtiRet != 0) return errRet; // CUT 2
 		
 		//printf("RTI Status: %d , livetime: %f\n",ev->GetRTIStat(),rti.lf);
-		if (rti.lf < 0.7) return 2;
-		if (rti.IsInSAA()) return 3;
-		if ((rti.nhwerr/rti.ntrig)>0.01) return 4;
-		if ((rti.ntrig/rti.nev)<0.99) return 5;
+		errRet++; if (rti.lf < 0.7) return errRet; // CUT 3
+		errRet++; if (rti.IsInSAA()) return errRet; // CUT 4
+		errRet++; if ((rti.nhwerr/rti.ntrig)>0.01) return errRet; // CUT 5
+		errRet++; if ((rti.ntrig/rti.nev)<0.99) return errRet; // CUT 6
 	}
+	else errRet+=5;
 
 	twrNT.fStatus=ev->fStatus;
 	twrNT.Event=ev->Event();
@@ -496,8 +374,8 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	TrTrackR* trTr = par->pTrTrack();
 	
 	// No XY hit on tracker layer 1
-	//pz	if (!trTr->TestHitLayerJHasXY(1)) return 7;
-	if (!trTr->TestHitLayerJ(1)) return 7;
+	//pz	if (!trTr->TestHitLayerJHasXY(1)) return errRet;
+	errRet++; if (!trTr->TestHitLayerJ(1)) return errRet; // CUT 7
 	
 	// Choutko algo. fit (1); inner tracker only (3); force refit (2);
 	//   assume He4 mass; assume charge 2
@@ -505,19 +383,19 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	// chiKanian algo. fit (3)
 	twrNT.trFitCode_K = trTr->iTrTrackPar(3,3,2,mHe4,2);
 	// Fit did not succeed.  (SHOULD NOT OCCUR)
-	if ((twrNT.trFitCode < 0)&&(twrNT.trFitCode_K < 0)) return 8;
+	errRet++; if ((twrNT.trFitCode < 0)&&(twrNT.trFitCode_K < 0)) return errRet; // CUT 8
 	
 	twrNT.iBH=par->iBetaH();
 	bool flag_betaH = (twrNT.iBH > -1);
 	bool flag_richRing = (twrNT.iRichRing());
 	// No source of beta
-	if (!(flag_betaH || flag_richRing)) return 9;
-//	if ((twrNT.iBH == -1)||(!twrNT.iBeta())) return 3;
-//	if (!twrNT.iRichRing()) return 4;
+	errRet++; if (!(flag_betaH || flag_richRing)) return errRet; // CUT 9
+//	errRet++; if ((twrNT.iBH == -1)||(!twrNT.iBeta())) return errRet;
+//	errRet++; if (!twrNT.iRichRing()) return errRet;
 	
 //	TofRecH::ReBuild();
 	BetaHR* betaH = par->pBetaH();
-	if (!betaH || (betaH->GetBeta()<=0)) return 10;
+	errRet++; if (!betaH || (betaH->GetBeta()<=0)) return errRet; // CUT 10
 	twrNT.betaHGood = betaH->IsGoodBeta();
 	
 	twrNT.chi2TBetaH = betaH->GetNormChi2T();
@@ -525,16 +403,16 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 
 	twrNT.qUTof = 0.5*(betaH->GetQL(0) + betaH->GetQL(1));
 	// Upper TOF charge far from 2.0
-	if ((twrNT.qUTof < 1.5)||(twrNT.qUTof > 3.0)) return 11;
+	errRet++; if ((twrNT.qUTof < 1.5)||(twrNT.qUTof > 3.0)) return errRet; // CUT 11
 	twrNT.qLTof = 0.5*(betaH->GetQL(2) + betaH->GetQL(3));
 	// Lower TOF charge far from 2.0
-	if ((twrNT.qLTof < 1.5)||(twrNT.qLTof > 3.0)) return 12;
+	errRet++; if ((twrNT.qLTof < 1.5)||(twrNT.qLTof > 3.0)) return errRet; // CUT 12
 	
 	twrNT.qTrLayer1 = trTr->GetLayerJQ(1,betaH->GetBeta());
 	// Tracker layer 1 charge far from 2.0
-	if ((twrNT.qTrLayer1 < 1.5)||(twrNT.qTrLayer1 > 3.0)) return 13;
+	errRet++; if ((twrNT.qTrLayer1 < 1.5)||(twrNT.qTrLayer1 > 3.0)) return errRet; // CUT 13
 	
-	if (ev->nLevel1() != 1) return 14;
+	errRet++; if (ev->nLevel1() != 1) return errRet; // CUT 14
 	cloneLevel1R(twrNT.lvl1,ev->Level1(0));
 	cloneRTI(twrNT.RTI,rti);
 
@@ -629,7 +507,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	FillTrdK(ev,ev->pParticle(0), &(twrNT.trdk));
  	if (twrNT.isMC)
  	{
-	  //if (ev->nMCEventg() < 1) return 14;
+	  //errRet++; if (ev->nMCEventg() < 1) return errRet;
  		MCEventgR* mcev = ev->pMCEventg(0);
  		twrNT.qMC = mcev->Charge;
  		if (twrNT.qMC != 0.) twrNT.rigMC = (mcev->Momentum / twrNT.qMC);

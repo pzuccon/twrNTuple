@@ -18,7 +18,8 @@ CXX:=`root-config --cxx`
 CPPFLAGS= -I$(SRC) -D_PGTRACK_ -D__ROOTSHAREDLIBRARY__ -Ilib -I$(AMSSRC)/include -I$(ROOTSYS)/include
 CXXFLAGS= $(DEBUGOPT) -fPIC -Wno-write-strings  $(CPPFLAGS)
 CFLAGS = $(DEBUGOPT)
-DEBUGOPT = -g 
+# By default, compiliation is optimized with -O3 flag.  Make target "debug" to use debug flag -g instead.
+DEBUGOPT = -O3 
 SLC_NO=6
 # if test -z "$$SLC_NO"; then SLC_NO="6"; echo "SLC_NO environment variable not set.  Using default value of SLC_NO=6."; fi;
 AMSNTUPLELIB=ntuple_slc$(SLC_NO)_PG

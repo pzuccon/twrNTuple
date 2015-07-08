@@ -4,6 +4,36 @@
 
 ClassImp(twrNTuple)
 
+void twrNTuple::Clear()
+{
+	richQual.Clear();
+	trdk.Clear();
+
+	Event=0;
+	Run=0;
+	fStatus=0;
+	nParticle_withTrack=0;
+  
+  	iBH=trFitCode=trFitCode_K=0;
+
+	bool betaHGood=false;
+	chi2TBetaH=chi2CBetaH=0.;
+
+	qInnerTr=qInnerTr_RMS=qTrLayer1=0.;
+	trPattern=trPatternXY=0;
+	
+	rigInnerTr=rrErrInnerTr=chiSqInnerTr=normChisqX=normChisqY=bcorr=0.;
+	rigInnerTr_K=rrErrInnerTr_K=chiSqInnerTr_K=normChisqX_K=normChisqY_K=bcorr_K=0.;
+	bcorrFlag=bcorrFlag_K=0;
+	
+	flagRich=0;
+	betaRich=betaRich_Err=0.;
+	
+	qUTof=qLTof=betaTof=betaTof_Err=betaSTof=betaCTof=betaCTof_Err=0.;
+	
+	cutoff_Stoermer=gtod_r=gtod_theta=gtod_phi=qMC=rigMC=mMC=0.;
+}
+
 float twrNTuple::betaMC()
 {
 	if (!isMC) return 0.;
