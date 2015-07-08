@@ -10,9 +10,7 @@ public:
 	// filled and should not be used.
 	twrRichQuality()
 	{
-		PMTs=-1;
-		IsGood=false;
-		IsClean=false;
+		Clear();
 	}
 	~twrRichQuality() {}
 

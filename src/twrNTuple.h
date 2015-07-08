@@ -13,22 +13,23 @@ class twrNTuple: public TObject
 {
 public:
   
-  twrNTuple(): TObject(), lvl1(), fStatus(0) {}
-  ~twrNTuple()
-  	{
-  	}
-  
-  // === Associated classes ===
-  twrLevel1R lvl1;
-  twrRTI     RTI;
-  twrRichQuality richQual; // Values used for RICH quality cuts
-   twrTrdK   trdk;
-  
-  // === Basics about event ===
-  unsigned int Event;
-  unsigned int Run;
-  unsigned long long fStatus;
-  int nParticle_withTrack;
+	twrNTuple(): TObject(), lvl1(), fStatus(0) {}
+	~twrNTuple()
+	{
+	}
+	void Clear();
+
+	// === Associated classes ===
+	twrLevel1R lvl1;
+	twrRTI     RTI;
+	twrRichQuality richQual; // Values used for RICH quality cuts
+	twrTrdK   trdk;
+
+	// === Basics about event ===
+	unsigned int Event;
+	unsigned int Run;
+	unsigned long long fStatus;
+	int nParticle_withTrack;
   
 // The highest rigidity particle is picked from each event.  All other quantities relate
 // to this chosen particle.
@@ -134,7 +135,7 @@ public:
 	bool posMomentum() {return bool(1 & (fStatus>>34));}
 	bool isNaF() {return bool(1 & (fStatus>>52));}
 
-	ClassDef(twrNTuple, 6);
+	ClassDef(twrNTuple, 5);
 };
 
 #endif
