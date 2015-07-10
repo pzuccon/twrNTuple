@@ -291,7 +291,7 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	long int presel=0;
 	for (int i = 0; i < nToUse;i++)
 	{
-	  if (i%1000==0) printf("Processed %9d out of %9d(max %9d)  preselected %9d \n",i,nToUse,nEv,presel);
+	  if (i%10000==0) printf("Processed %9d out of %9d(max %9d)  preselected %9d \n",i,nToUse,nEv,presel);
 		AMSEventR* ev = ch.GetEvent(i);
 		int procRet = fillNTuple_preselect(nt, ev);
 //		printf("ev%d: %d\n",i,procRet);
