@@ -83,6 +83,7 @@ Bool_t FillTrdK(AMSEventR* pev,ParticleR* part, twrTrdK* tdk){
   //---
   //---Track
   tdk->fid=trk->iTrTrackPar(1,5,2); // Get any prefered fit code
+  if (tdk->fid < 0) return false;
 
   double trdlikr[3]={-1,-1,-1},trdlikre[3]={-1,-1,-1},trdlik[3]={-1,-1,-1}; //LikelihoodRatio :  e/P, e/H, P/H
 
