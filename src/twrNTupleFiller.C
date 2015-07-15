@@ -128,7 +128,9 @@ Bool_t FillTrdK(AMSEventR* pev,ParticleR* part, twrTrdK* tdk){
     }
   }
   ///TRD-Charge
-    trdcluster.CalculateTRDCharge(0,part->pBetaH()->GetBeta());
+  float betaToUse=1.; // Use default value of 1. if there is no BetaH object for the particle
+  if (part->iBetaH() != -1) betaToUse=part->pBetaH()->GetBeta();
+    trdcluster.CalculateTRDCharge(0,betaToUse);
     tdk->trd_qk[0]=   trdcluster.GetTRDCharge();
     tdk->trd_qk[1]=   trdcluster.GetTRDChargeUpper();
     tdk->trd_qk[2]=   trdcluster.GetTRDChargeLower();
@@ -139,10 +141,10 @@ Bool_t FillTrdK(AMSEventR* pev,ParticleR* part, twrTrdK* tdk){
     tdk->trd_ipch=    trdcluster.GetIPChi2();//impact Chis
 
     ///--End Fragmentation delta
-      trdcluster.CalculateTRDCharge(1,part->pBetaH()->GetBeta());
+      trdcluster.CalculateTRDCharge(1,betaToUse);
       tdk->trd_qk[3]=   trdcluster.GetTRDCharge();
       tdk->trd_qrmsk[1]=trdcluster.GetTRDChargeError();
-      trdcluster.CalculateTRDCharge(2,part->pBetaH()->GetBeta());
+      trdcluster.CalculateTRDCharge(2,betaToUse);
       tdk->trd_qk[4]=   trdcluster.GetTRDCharge();
       tdk->trd_qrmsk[2]=trdcluster.GetTRDChargeError();
 
