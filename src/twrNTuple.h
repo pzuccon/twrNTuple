@@ -3,9 +3,14 @@
 
 #include "TObject.h"
 #include "twrLevel1R.h"
-#include "twrRTI.h"
 #include "twrTrdK.h"
 #include "twrRichQuality.h"
+
+#ifdef _IS_MC_
+#include "twrMC.h"
+#else
+#include "twrRTI.h"
+#endif
 
 
 // Variables fetched by ProcessEvent(), put into a class
@@ -21,9 +26,14 @@ public:
 
 	// === Associated classes ===
 	twrLevel1R lvl1;
+#ifndef _IS_MC_
 	twrRTI     RTI;
+#endif
 	twrRichQuality richQual; // Values used for RICH quality cuts
 	twrTrdK   trdk;
+#ifdef _IS_MC_
+	twrMC      mc;
+#endif
 
 	// === Basics about event ===
 	unsigned int Event;
