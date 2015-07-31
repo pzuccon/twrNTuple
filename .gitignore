@@ -27,6 +27,9 @@
 *.out
 *.app
 
+# gedit temporary files
+*~
+
 # ##### ROOT-specific ignores #####
 # Dependency files generated automatically by ACLiC
 *_C.d
