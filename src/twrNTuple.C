@@ -32,6 +32,12 @@ void twrNTuple::Clear()
 	qUTof=qLTof=betaTof=betaTof_Err=betaSTof=betaCTof=betaCTof_Err=0.;
 	
 	cutoff_Stoermer=gtod_r=gtod_theta=gtod_phi=qMC=rigMC=mMC=0.;
+	
+#ifdef _IS_MC_
+	for (int i=0; i<20; i++) {pidTrdL_MC[i]=0; momTrdL_MC[i]=0.;}
+	for (int i=0; i<9; i++) {pidTrL_MC[i]=0; momTrL_MC[i]=0.;}
+	for (int i=0; i<4; i++) {pidTofL_MC[i]=0; momTofL_MC[i]=0.;}
+#endif
 }
 
 float twrNTuple::betaMC()

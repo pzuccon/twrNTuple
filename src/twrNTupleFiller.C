@@ -516,6 +516,55 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
  		if (twrNT.qMC != 0.) twrNT.rigMC = (mcev->Momentum / twrNT.qMC);
  		else twrNT.rigMC = mcev->Momentum;
  		twrNT.mMC = mcev->Mass;
+
+#ifdef _IS_MC_
+		// TRD MC quantities
+		{
+			float lMass[20];
+			for (int il=0; il<20; il++) lMass[il]=-1.;
+			
+			for (int itrd=0; itrd<ev->nTrdMCCluster(); itrd++)
+			{
+				TrdMCClusterR* trdmc=ev->pTrdMCCluster(itrd);
+				int ilay = trdmc->Layer;
+				float thisM=geantMass[trdmc->ParticleNo - 1];
+				if (thisM>lMass[ilay] || (thisM==lMass[ilay] && trdmc->Ekin > momTrdL_MC[ilay]))
+				{
+					lMass[ilay]=thisM;
+					momTrdL_MC[ilay]=trdmc->Ekin;
+					pidTrdL_MC[ilay]=trdmc->ParticleNo;
+				}
+			}
+		}
+		
+		// Tracker MC quantities
+		{
+			float lMass[9];
+			for (int il=0; il<9; il++) lMass[il]=-1.;
+			
+			for (int itr=0; itr<ev->nTrMCCluster(); itr++)
+			{
+				TrMCClusterR* trmc=ev->pTrMCCluster(itr);
+				int ilay = fabs(trmc->GetTkId()/100);
+				if (ilay==8) ilay=1;
+				else if (ilay<8) il++;
+				il--;
+				
+				float thisM=geantMass[trmc->GetPart() - 1];
+				if (thisM>lMass[ilay] || (thisM==lMass[ilay] && trmc->GetMomentum() > momTrdL_MC[ilay]))
+				{
+					lMass[ilay]=thisM;
+					momTrL_MC[ilay]=trmc->GetMomentum();
+					pidTrL_MC[ilay]=trmc->GetPart();
+					isPrimaryTrL_MC[ilay]=trmc->IsPrimary();
+				}
+			}
+		}
+		
+		
+		
+#endif
+
  	}
  	else
  	{
@@ -616,3 +665,4 @@ int twrNTupleFiller::RichQC(twrRichQuality *vals)
 	
 	return 1;
 }
+
