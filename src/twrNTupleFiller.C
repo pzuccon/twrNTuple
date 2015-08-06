@@ -547,8 +547,8 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 				TrMCClusterR* trmc=ev->pTrMCCluster(itr);
 				int ilay = fabs(trmc->GetTkId()/100);
 				if (ilay==8) ilay=1;
-				else if (ilay<8) il++;
-				il--;
+				else if (ilay<8) ilay++;
+				ilay--;
 				
 				float thisM=geantMass[trmc->GetPart() - 1];
 				if (thisM>lMass[ilay] || (thisM==lMass[ilay] && trmc->GetMomentum() > momTrdL_MC[ilay]))
@@ -561,7 +561,10 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 			}
 		}
 		
-		
+		// TOF MC quantities
+		{
+			
+		}
 		
 #endif
 

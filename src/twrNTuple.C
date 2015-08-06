@@ -36,7 +36,7 @@ void twrNTuple::Clear()
 #ifdef _IS_MC_
 	for (int i=0; i<20; i++) {pidTrdL_MC[i]=0; momTrdL_MC[i]=0.;}
 	for (int i=0; i<9; i++) {pidTrL_MC[i]=0; momTrL_MC[i]=0.;}
-	for (int i=0; i<4; i++) {pidTofL_MC[i]=0; momTofL_MC[i]=0.;}
+	for (int i=0; i<4; i++) {pidTofL_MC[i]=0; betaTofL_MC[i]=0.;}
 #endif
 }
 
