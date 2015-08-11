@@ -22,14 +22,6 @@
 #include "twrNTuple.h"
 #include "resClassCommon.h"
 
-const float geantMass[50]={
-.0000E+00,.5110E-03,.5110E-03,.0000E+00,.1057E+00,.1057E+00,.1350E+00,.1396E+00,.1396E+00,.4977E+00,
-.4937E+00,.4937E+00,.9396E+00,.9383E+00,.9383E+00,.4977E+00,.5475E+00,.1116E+01,.1189E+01,.1193E+01,
-.1197E+01,.1315E+01,.1321E+01,.1672E+01,.9396E+00,.1116E+01,.1189E+01,.1193E+01,.1197E+01,.1315E+01,
-.1321E+01,.1672E+01,-1.      ,-1.      ,-1.      ,-1.      ,-1.      ,-1.      ,-1.      ,-1.      ,
--1.      ,-1.      ,-1.      ,-1.      ,.1876E+01,.2809E+01,.3727E+01,.0000E+00,.2809E+01,.0000E+00};
-
-
 
 class twrNTupleFiller
 {
@@ -67,5 +59,10 @@ public:
 	
   //	ClassDef(twrNTupleFiller, 0);
 };
+
+#ifdef _IS_MC_
+int associateTrMCCluster_TkId(AMSEventR* ev, int tkid);
+int associateTrMCCluster_Pt(AMSEventR* ev, AMSPoint pt);
+#endif // _IS_MC_
 
 #endif /* twrNTupleFiller_h */

@@ -2,6 +2,10 @@
 #include "twrTrdK.h"
 #include "TrdKCluster.h"
 
+#ifdef _IS_MC_
+#include "TkSens.h" // TkSens used to match MC Tracker hits to detected hits by ladder
+#endif
+
 
 void FilltwrTrdKHit( twrTrdKHit* mhit,TrdKHit* hit){
 
@@ -544,6 +548,43 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 		}
 		
 		// Tracker MC quantities
+		int iMCCl[9];
+//		int tkidInt[9];
+		int bestFitId = (twrNT.trFitCode >= 0) ? twrNT.trFitCode : twrNT.trFitCode_K;
+		// Retrieve tracker ladder identifiers (TkId) for interpolated track
+		for (int il=0; il<9; il++)
+		{
+			AMSPoint pt=trTr->InterpolateLayerJ(il+1,bestFitId);
+			TkSens tks(pt, true);
+//			tkidInt[il]=tks.GetLadTkID(); // 0 if track interpolation does not fall on a ladder			
+			twrNT.tkId_Interpolated[il]=tks.GetLadTkID(); // 0 if track interpolation does not fall on a ladder
+		}
+
+		// Loop through MC tracker clusters to associate them with interpolated ladders
+		for (int icl=0; icl<ev->nTrMCCluster(); icl++)
+		{
+			TrMCClusterR* trmc = ev->pTrMCCluster(icl);
+			for (int il=0; il<9; il++)
+			{
+				// Skip the layers for which the interpolated track doesn't fall on a ladder
+				if (twrNT.tkId_Interpolated[il] == 0) continue;
+				
+				int thisTkid = trmc->GetTkId();
+				if (twrNT.tkId_Interpolated[il] == thisTkid)
+				{
+					float thisMom=fabs(trmc->GetMomentum()); // Is retaining the sign important?
+					if (thisMom > twrNT.momTrL_MC[il]) // momTrL_MC has been initialized to zero
+					{
+						twrNT.momTrL_MC[il]=thisMom;
+						twrNT.pidTrL_MC[il]=trmc->GetPart();
+						twrNT.isPrimaryTrL_MC[il]=trmc->IsPrimary();
+					}
+				}
+			} // il
+		} // icl
+		
+		
+/*
 		{
 			float lMass[9];
 			for (int il=0; il<9; il++) lMass[il]=-1.;
@@ -567,6 +608,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 				}
 			}
 		}
+*/
 		
 		// TOF MC quantities
 		{
@@ -677,4 +719,56 @@ int twrNTupleFiller::RichQC(twrRichQuality *vals)
 	
 	return 1;
 }
+
+
+#ifdef _IS_MC_
+
+// Find the TrMCCluster on a given tracker ladder (by TkId) with the highest momentum.
+// Return the index of this TrMCCluster in the AMSEventR, or -1 if none found.
+int associateTrMCCluster_TkId(AMSEventR* ev, int tkid)
+{
+//	int nFound=0;
+	if (!ev) return -5;
+	float highMom=0.;
+	int ind=-2;
+	for (int icl=0; icl<ev->nTrMCCluster(); icl++)
+	{
+		TrMCClusterR* trmc = ev->pTrMCCluster(icl);
+		if (tkid == trmc->GetTkId())
+		{
+//			nFound++;
+			float thisMom=fabs(trmc->GetMomentum());
+			if (thisMom>highMom) {highMom=thisMom; ind=icl;}
+		}
+	}
+
+	return ind;
+}
+
+// Find the TrMCCluster on the same TkId as a given point.
+// If there are multiple, choose the one with the highest momentum.
+// Return the index of this TrMCCluster in the event, -1 if none found,
+// -2 if the AMSPoint does not fall on a ladder.
+int associateTrMCCluster_Pt(AMSEventR* ev, AMSPoint pt)
+{
+	TkSens tks(pt, true);
+	int tkid=tks.GetLadTkID();
+	if (tkid==0) return -2;
+	else return associateTrMCCluster_TkId(ev, tkid);
+}
+
+/*
+void assocaiteAllTrCrossings(AMSEventR* ev, int fitID)
+{
+	int iMCCl[10];
+	for (int jl=1; jl<=9; jl++)
+	{
+		AMSPoint pt=InterpolateLayerJ(jl,fitID);
+		iMCCl[jl]=associateTrMCCluster_Pt(ev, pt);
+	}
+}
+*/
+
+#endif // _IS_MC_
+
 

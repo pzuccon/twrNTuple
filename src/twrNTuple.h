@@ -107,18 +107,20 @@ public:
 	float qMC, rigMC, mMC; // True values of Q,R,m for incoming particle
 	
 #ifdef _IS_MC_
+
 	// MC TRD
 	int pidTrdL_MC[20];
 	float momTrdL_MC[20];
 	// MC Tracker
 	int pidTrL_MC[9];
+	int tkId_Interpolated[9];
 	float momTrL_MC[9];
 	bool isPrimaryTrL_MC[9];
 	// MC TOF
 	int pidTofL_MC[4];
 	float betaTofL_MC[4];
 	// MC RICH
-	
+
 #endif
 	
 // === Derived quantities ===	
