@@ -155,7 +155,7 @@ Bool_t FillTrdK(AMSEventR* pev,ParticleR* part, twrTrdK* tdk){
 }
 
 
-
+#ifndef _IS_MC_
 
 //ClassImp(twrNTupleFiller);
 static void cloneRTI(twrRTI & dest,  AMSSetupR::RTI& orig){
@@ -201,6 +201,7 @@ static void cloneRTI(twrRTI & dest,  AMSSetupR::RTI& orig){
 
 }
 
+#endif
 
 static void cloneLevel1R( twrLevel1R& dest, const Level1R &copyMe)
 {
@@ -279,8 +280,10 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	int nEv = ch.GetEntries();
 	int nToUse;
 
+#ifndef _IS_MC_
 // 	AMSSetupR::RTI::UseLatest(); // before pass6
 	AMSSetupR::RTI::UseLatest(6); // pass6 onward
+#endif
 	
 	// These lines are recommended for inclusion.  They are in the analysis_amsd30n.C file
 	TkDBc::UseFinal();
@@ -417,7 +420,9 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	
 	errRet++; if (ev->nLevel1() != 1) return errRet; // CUT 14
 	cloneLevel1R(twrNT.lvl1,ev->Level1(0));
+#ifndef _IS_MC_
 	cloneRTI(twrNT.RTI,rti);
+#endif
 
 //	twrNT.lvl1 = new twrLevel1R();
 
@@ -527,12 +532,13 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 			{
 				TrdMCClusterR* trdmc=ev->pTrdMCCluster(itrd);
 				int ilay = trdmc->Layer;
-				float thisM=geantMass[trdmc->ParticleNo - 1];
-				if (thisM>lMass[ilay] || (thisM==lMass[ilay] && trdmc->Ekin > momTrdL_MC[ilay]))
+				int pNo = trdmc->ParticleNo;
+				float thisM=(pNo<1 || pNo>50)?-1.:geantMass[pNo - 1];
+				if (thisM>lMass[ilay] || (thisM==lMass[ilay] && trdmc->Ekin > twrNT.momTrdL_MC[ilay]))
 				{
 					lMass[ilay]=thisM;
-					momTrdL_MC[ilay]=trdmc->Ekin;
-					pidTrdL_MC[ilay]=trdmc->ParticleNo;
+					twrNT.momTrdL_MC[ilay]=trdmc->Ekin;
+					twrNT.pidTrdL_MC[ilay]=pNo;
 				}
 			}
 		}
@@ -550,13 +556,14 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 				else if (ilay<8) ilay++;
 				ilay--;
 				
-				float thisM=geantMass[trmc->GetPart() - 1];
-				if (thisM>lMass[ilay] || (thisM==lMass[ilay] && trmc->GetMomentum() > momTrdL_MC[ilay]))
+				int pNo = trmc->GetPart();
+				float thisM=(pNo<1 || pNo>50)?-1.:geantMass[pNo - 1];
+				if (thisM>lMass[ilay] || (thisM==lMass[ilay] && trmc->GetMomentum() > twrNT.momTrdL_MC[ilay]))
 				{
 					lMass[ilay]=thisM;
-					momTrL_MC[ilay]=trmc->GetMomentum();
-					pidTrL_MC[ilay]=trmc->GetPart();
-					isPrimaryTrL_MC[ilay]=trmc->IsPrimary();
+					twrNT.momTrL_MC[ilay]=trmc->GetMomentum();
+					twrNT.pidTrL_MC[ilay]=pNo;
+					twrNT.isPrimaryTrL_MC[ilay]=trmc->IsPrimary();
 				}
 			}
 		}
@@ -571,10 +578,12 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
  	}
  	else
  	{
+#ifndef _IS_MC_
  		twrNT.gtod_r = rti.r;
 		twrNT.gtod_theta = rti.theta;
 		twrNT.gtod_phi = rti.phi;
 		twrNT.cutoff_Stoermer = float(par->GetGeoCutoff(ev));
+#endif
  	}
 	
 	return 0;
