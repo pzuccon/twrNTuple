@@ -16,7 +16,8 @@ CXX:=`root-config --cxx`
 
 # Flags used in compilation
 CPPFLAGS= -I$(SRC) -D_PGTRACK_ -D__ROOTSHAREDLIBRARY__ -Ilib -I$(AMSSRC)/include -I$(ROOTSYS)/include
-CXXFLAGS= $(DEBUGOPT) -fPIC -Wno-write-strings  $(CPPFLAGS)
+# -Wno-pragmas hides warnings "ignoring #pragma omp atomic" in AMS ROOT code
+CXXFLAGS= $(DEBUGOPT) -fPIC -Wno-pragmas -Wno-write-strings  $(CPPFLAGS)
 CFLAGS = $(DEBUGOPT)
 
 # By default, compiliation is optimized with -O3 flag.  Make target "debug" to use debug flag -g instead.
@@ -63,6 +64,9 @@ $(BIN)MC/%.o: $(SRC)%.C
 # 	$(CXX) -o $@ $(CXXFLAGS) $< -L$(LIB) -lResTemp_a -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
 
 # Named targets
+default:
+	@echo "Please choose a specific named target (e.g., all, debug, mc_only, clean, ...)"
+
 all: dirStructure lib prog
 	$(MAKE) -C sql
 
