@@ -13,11 +13,10 @@
 #include "HistoMan.h"
 #include "FrameTrans.h"
 #include "root_setup.h"
-#include "TrdKCluster.h"
 #include "TofTrack.h"
 #include "TNtuple.h"
 #include "Tofrec02_ihep.h"
-#include "TrdSCalib.h"
+//#include "TrdSCalib.h"
 
 #include "twrNTuple.h"
 #include "resClassCommon.h"

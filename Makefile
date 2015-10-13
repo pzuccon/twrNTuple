@@ -33,7 +33,7 @@ ALL_LIBS = $(LIB)libTWR_DA.so $(LIB)libTWR_DA_a.a $(LIB)libTWR_MC.so $(LIB)libTW
 # Files to be included in library (classes & common functions); each should have a corresponding header file.
 # These should also match the pragma statements in the linkdef.h file
 LIB_SRCS = $(SRC)resClassCommon.C $(SRC)HistoProofMan.C
-LIB_SRCS+= $(SRC)twrNTuple.C $(SRC)twrLevel1R.C $(SRC)twrRTI.C $(SRC)twrTrdK.C $(SRC)twrTrdKHit.C $(SRC)twrRichQuality.C
+LIB_SRCS+= $(SRC)twrNTuple.C $(SRC)twrLevel1R.C $(SRC)twrRTI.C $(SRC)twrRichQuality.C
 
 LIB_HEADS = $(LIB_SRCS:$(SRC)%.C=$(SRC)%.h)
 LIB_OBJS  = $(LIB_SRCS:$(SRC)%.C=$(BIN)%.o)

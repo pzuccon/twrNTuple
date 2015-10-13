@@ -3,7 +3,6 @@
 
 #include "TObject.h"
 #include "twrLevel1R.h"
-#include "twrTrdK.h"
 #include "twrRichQuality.h"
 
 #ifndef _IS_MC_
@@ -28,7 +27,6 @@ public:
 	twrRTI     RTI;
 #endif
 	twrRichQuality richQual; // Values used for RICH quality cuts
-	twrTrdK   trdk;
 
 	// === Basics about event ===
 	unsigned int Event;
@@ -108,9 +106,9 @@ public:
 	
 #ifdef _IS_MC_
 
-	// MC TRD
-	int pidTrdL_MC[20];
-	float momTrdL_MC[20];
+//	// MC TRD
+//	int pidTrdL_MC[20];
+//	float momTrdL_MC[20];
 	// MC Tracker
 	int pidTrL_MC[9];
 	int tkId_Interpolated[9];
