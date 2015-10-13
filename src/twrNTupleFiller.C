@@ -101,16 +101,16 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	// Load input AMS data file
 	int addOK;
 	addOK = ch.Add(rootFile);
-	printf("Loading single AMS data file: %s\n  > Status=%d\n",rootFile,addOK);
+	printf("[TWR] Loading single AMS data file: %s\n  > Status=%d\n",rootFile,addOK);
 	
-	if (!ch.GetEntries()) {printf("ERROR processing input data file(s)--ABORT doPreselect()\n"); return addOK;}
-	printf("Number of entries loaded: %d\n",ch.GetEntries());	
+	if (!ch.GetEntries()) {printf("[TWR] ERROR processing input data file(s)--ABORT doPreselect()\n"); return addOK;}
+	printf("[TWR] Number of entries loaded: %d\n",ch.GetEntries());	
 	
 	// Open output file and tree for n-tuples
 	TFile* tf = new TFile(outNTupleFile, "RECREATE");
 	if (!tf->IsOpen())
 	{
-		printf("ERROR opening output TFile:%s--ABORT doPreselect()\n",outNTupleFile);
+		printf("[TWR] ERROR opening output TFile:%s--ABORT doPreselect()\n",outNTupleFile);
 		if (tf) {delete tf; tf=0;}
 		return -10;
 	}
@@ -149,17 +149,17 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	long int presel=0;
 	for (int i = 0; i < nToUse;i++)
 	{
-	  if (i%10000==0) printf("Processed %9d out of %9d(max %9d)  preselected %9d \n",i,nToUse,nEv,presel);
+	  if (i%10000==0) printf("[TWR] Processed %9d out of %9d(max %9d) preselected %9d \n",i,nToUse,nEv,presel);
 		AMSEventR* ev = ch.GetEvent(i);
 		int procRet = fillNTuple_preselect(nt, ev);
-//		printf("ev%d: %d\n",i,procRet);
+//		printf("[TWR] ev%d: %d\n",i,procRet);
 		if (procRet==0) {tt->Fill(); presel++;}
 		if (procRet<nCuts) accumCuts[procRet]++;
 //		hman.Fill("ProcessEventRet",procRet);
 //		if (stop==1) break;
 	}
 	
-	printf("FINISHED processing %9d events\n",nToUse);
+	printf("[TWR] FINISHED processing %9d events\n",nToUse);
 
 	// Process histograms that track cuts and acceptances
 	char hTit[100];
@@ -182,13 +182,13 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	h_preselect->SetStats(false);
 	tf->cd();
 //	gDirectory->pwd();
-    printf("Output directed to: %s",gDirectory->GetPath());
+    printf("[TWR] Output directed to: %s",gDirectory->GetPath());
     h_returnVal->Write();
 	h_preselect->Write();
 	
 	// Write file; wrap up
 	tf->Write();
-	printf("Output n-tuple file will be found at %s\n",outNTupleFile);
+	printf("[TWR] Output n-tuple file will be found at %s\n",outNTupleFile);
 //	hman.Save();
 
 	return 0;
@@ -213,7 +213,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 		int rtiRet = ev->GetRTI(rti);
 		errRet++; if (rtiRet != 0) return errRet; // CUT 2
 		
-		//printf("RTI Status: %d , livetime: %f\n",ev->GetRTIStat(),rti.lf);
+		//printf("[TWR] RTI Status: %d , livetime: %f\n",ev->GetRTIStat(),rti.lf);
 		errRet++; if (rti.lf < 0.7) return errRet; // CUT 3
 		errRet++; if (rti.IsInSAA()) return errRet; // CUT 4
 		errRet++; if ((rti.nhwerr/rti.ntrig)>0.01) return errRet; // CUT 5
