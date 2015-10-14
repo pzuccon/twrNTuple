@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 {
 	if ((argc < 3)||(argc > 4))
 	{
-		printf("[TWR] ERROR: Improper number of arguments:\n %s <in_rootFile> <out_ntupleFile> [maxEvents]\n",argv[0]);
+		printf("[TWR] ERROR: Improper number of arguments:\n[TWR]  %s <in_rootFile> <out_ntupleFile> [maxEvents]\n",argv[0]);
 		return -1;
 	}
 

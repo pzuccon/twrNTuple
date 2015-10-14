@@ -101,7 +101,7 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	// Load input AMS data file
 	int addOK;
 	addOK = ch.Add(rootFile);
-	printf("[TWR] Loading single AMS data file: %s\n  > Status=%d\n",rootFile,addOK);
+	printf("[TWR] Loading single AMS data file: %s\n[TWR]   > Status=%d\n",rootFile,addOK);
 	
 	if (!ch.GetEntries()) {printf("[TWR] ERROR processing input data file(s)--ABORT doPreselect()\n"); return addOK;}
 	printf("[TWR] Number of entries loaded: %d\n",ch.GetEntries());	
@@ -159,7 +159,7 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 //		if (stop==1) break;
 	}
 	
-	printf("[TWR] FINISHED processing %9d events\n",nToUse);
+	printf("[TWR] FINISHED processing %d events\n",nToUse);
 
 	// Process histograms that track cuts and acceptances
 	char hTit[100];
@@ -182,7 +182,7 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	h_preselect->SetStats(false);
 	tf->cd();
 //	gDirectory->pwd();
-    printf("[TWR] Output directed to: %s",gDirectory->GetPath());
+    printf("[TWR] Output directed to: %s\n",gDirectory->GetPath());
     h_returnVal->Write();
 	h_preselect->Write();
 	
