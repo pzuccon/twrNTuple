@@ -45,8 +45,9 @@ LIB_HEADS_BARE = $(LIB_HEADS:$(SRC)%=%)
 
 # Files not to be included in library (executables, ...)
 PROG_SRCS = $(SRC)processSingleFile.C
-
-ALL_PROGS = processDAFile.out processMCFile.out
+# Only remake main executables if there are no changes to be committed in git
+ALL_PROGS_FINAL = processDAFile.out processMCFile.out
+ALL_PROGS_NC = $(ALL_PROGS_FINAL:%.out=%_NOCOMMIT.out)
 
 # Wildcard targets
 $(BIN)%.o: $(SRC)%.C
@@ -80,7 +81,7 @@ debug_clean: DEBUGOPT=-g
 debug_clean: all_clean
 
 #prog: processSingleFile.out
-prog: $(ALL_PROGS)
+prog: $(ALL_PROGS_FINAL) version
 
 mc_only: lib_MC processMCFile.out
 
@@ -91,16 +92,28 @@ da_only: lib_DA processDAFile.out
 #	@echo ">> Making executable $@ ..."
 #	$(CXX) -o $@ $^ $(CXXFLAGS) -L$(LIB) -lResTemp_a -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
 
+# Common dependencies
+version processDAFile.out: $(BIN)twrNTupleFiller.o $(BIN)processSingleFile.o  $(LIB)libTWR_DA_a.a
+version processMCFile.out: $(BIN)MC/twrNTupleFiller.o $(BIN)MC/processSingleFile.o  $(LIB)libTWR_MC_a.a
+
+# Version tracking file for executables
+version:
+	@echo ">> Updating versioning file .version ..."
+	git describe --tags --long > .version_NOCOMMIT
+	./.moveFileIfRepoClean.sh .version_NOCOMMIT .version
+
+processDAFile.out: 
+	@echo ">> Making executable $@ ..."
+	$(CXX) -o processDAFile_NOCOMMIT.out $^ $(CXXFLAGS) -L$(LIB) -lTWR_DA_a -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
+	./.moveFileIfRepoClean.sh processDAFile_NOCOMMIT.out processDAFile.out
+
+processMCFile.out: 
+	@echo ">> Making executable $@ ..."
+	$(CXX) -o processMCFile_NOCOMMIT.out $^ -D_IS_MC_ $(CXXFLAGS) -L$(LIB) -lTWR_MC_a -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
+	./.moveFileIfRepoClean.sh processMCFile_NOCOMMIT.out processMCFile.out
+
 processSingleFile.out: | processDAFile.out
 	ln -s processDAFile.out $@
-
-processDAFile.out: $(BIN)twrNTupleFiller.o $(BIN)processSingleFile.o  $(LIB)libTWR_DA_a.a 
-	@echo ">> Making executable $@ ..."
-	$(CXX) -o $@ $^ $(CXXFLAGS) -L$(LIB) -lTWR_DA_a -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
-
-processMCFile.out: $(BIN)MC/twrNTupleFiller.o $(BIN)MC/processSingleFile.o  $(LIB)libTWR_MC_a.a 
-	@echo ">> Making executable $@ ..."
-	$(CXX) -o $@ $^ -D_IS_MC_ $(CXXFLAGS) -L$(LIB) -lTWR_MC_a -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
 
 # Directory structure target
 dirStructure:
@@ -165,7 +178,8 @@ test:
 	@echo $(LIB_OBJS)
 	@echo $(LIB_HEADS)
 	@echo $(LIB_HEADS_BARE)
-	@echo $(ALL_PROGS)
+	@echo $(ALL_PROGS_FINAL)
+	@echo "Git clean: $(GIT_CLEAN)"
 
 .PHONY: all all_clean prog lib lib_DA lib_MC lib_aliases dirStructure test clean clean_lib debug debug_clean
 
@@ -178,7 +192,7 @@ clean:
 	rm -fv $(BIN)TWR_DA_Dict.h
 	rm -fv $(BIN)MC/TWR_MC_Dict.C
 	rm -fv $(BIN)MC/TWR_MC_Dict.h
-	rm -fv $(ALL_PROGS)
+	rm -fv $(ALL_PROGS_NC)
 	$(MAKE) -C sql clean
 
 clean_lib: clean
