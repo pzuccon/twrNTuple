@@ -5,9 +5,7 @@
 #include "twrLevel1R.h"
 #include "twrRichQuality.h"
 
-#ifndef _IS_MC_
 #include "twrRTI.h"
-#endif
 
 
 // Variables fetched by ProcessEvent(), put into a class
@@ -23,9 +21,7 @@ public:
 
 	// === Associated classes ===
 	twrLevel1R lvl1;
-#ifndef _IS_MC_
 	twrRTI     RTI;
-#endif
 	twrRichQuality richQual; // Values used for RICH quality cuts
 
 	// === Basics about event ===
@@ -104,7 +100,6 @@ public:
 	bool isMC; // Flag for whether not event is an MC event
 	float qMC, rigMC, mMC; // True values of Q,R,m for incoming particle
 	
-#ifdef _IS_MC_
 
 //	// MC TRD
 //	int pidTrdL_MC[20];
@@ -119,7 +114,6 @@ public:
 	float betaTofL_MC[4];
 	// MC RICH
 
-#endif
 	
 // === Derived quantities ===	
 	float betaMC(); // True beta of incoming particle, from other MC quantities

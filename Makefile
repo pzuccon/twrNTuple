@@ -28,7 +28,7 @@ SLC_NO?=6
 AMSNTUPLELIB=ntuple_slc$(SLC_NO)_PG
 
 # All libs to be built (The last two are symbolic links for legacy support)
-ALL_LIBS = $(LIB)libTWR_DA.so $(LIB)libTWR_DA_a.a $(LIB)libTWR_MC.so $(LIB)libTWR_MC_a.a $(LIB)libResTemp.so $(LIB)libResTemp_a.a
+ALL_LIBS = $(LIB)libTWR.so $(LIB)libTWR_a.a $(LIB)libResTemp.so $(LIB)libResTemp_a.a
 
 # Files to be included in library (classes & common functions); each should have a corresponding header file.
 # These should also match the pragma statements in the linkdef.h file
@@ -37,16 +37,14 @@ LIB_SRCS+= $(SRC)twrNTuple.C $(SRC)twrLevel1R.C $(SRC)twrRTI.C $(SRC)twrRichQual
 
 LIB_HEADS = $(LIB_SRCS:$(SRC)%.C=$(SRC)%.h)
 LIB_OBJS  = $(LIB_SRCS:$(SRC)%.C=$(BIN)%.o)
-LIB_OBJS_MC = $(LIB_SRCS:$(SRC)%.C=$(BIN)MC/%.o)
 #LIB_DEPS  = $(LIB_SRCS:$(SRC)%.C=$(DEP)%.d)
 LIB_HEADS_BARE = $(LIB_HEADS:$(SRC)%=%)
-#LIB_HEADS_BARE_MC = 
 # The above list is used in the call to rootcint (strip directories off filenames)
 
 # Files not to be included in library (executables, ...)
 PROG_SRCS = $(SRC)processSingleFile.C
 # Only remake main executables if there are no changes to be committed in git
-ALL_PROGS_FINAL = processDAFile.out processMCFile.out
+ALL_PROGS_FINAL = processSingleFile.out
 ALL_PROGS_NC = $(ALL_PROGS_FINAL:%.out=%_NOCOMMIT.out)
 
 # Wildcard targets
@@ -54,11 +52,6 @@ $(BIN)%.o: $(SRC)%.C
 	@echo ">> Compiling $< into $@ ..."
 	@if ! [ -d $(BIN) ] ; then mkdir -p $(BIN); fi
 	$(CXX) -c $(CXXFLAGS) $< -o $@ -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB)
-	
-$(BIN)MC/%.o: $(SRC)%.C
-	@echo ">> Compiling $< into $@ ..."
-	@if ! [ -d $(BIN)MC/ ] ; then mkdir -p $(BIN)MC/; fi
-	$(CXX) -c -D_IS_MC_ $(CXXFLAGS) $< -o $@ -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB)
 
 # %.out: $(SRC)%.C
 # 	@echo ">> Making executable $@ ..."
@@ -66,7 +59,7 @@ $(BIN)MC/%.o: $(SRC)%.C
 
 # Named targets
 default:
-	@echo "Please choose a specific named target (e.g., all, debug, mc_only, clean, ...)"
+	@echo "Please choose a specific named target (e.g., all, debug, clean, ...)"
 
 all: dirStructure lib prog
 	$(MAKE) -C sql
@@ -83,18 +76,13 @@ debug_clean: all_clean
 #prog: processSingleFile.out
 prog: $(ALL_PROGS_FINAL) version
 
-mc_only: lib_MC processMCFile.out
-
-da_only: lib_DA processDAFile.out
-
 # Executable targets
 #processSingleFile.out: $(BIN)twrNTupleFiller.o $(BIN)processSingleFile.o  $(LIB)libTWR_DA_a.a 
 #	@echo ">> Making executable $@ ..."
 #	$(CXX) -o $@ $^ $(CXXFLAGS) -L$(LIB) -lResTemp_a -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
 
 # Common dependencies
-version processDAFile.out: $(BIN)twrNTupleFiller.o $(BIN)processSingleFile.o  $(LIB)libTWR_DA_a.a
-version processMCFile.out: $(BIN)MC/twrNTupleFiller.o $(BIN)MC/processSingleFile.o  $(LIB)libTWR_MC_a.a
+processSingleFile.out version: $(BIN)twrNTupleFiller.o $(BIN)processSingleFile.o  $(LIB)libTWR_a.a
 
 # Version tracking file for executables
 version:
@@ -102,74 +90,44 @@ version:
 	git describe --tags --long > .version_NOCOMMIT
 	./.moveFileIfRepoClean.sh .version_NOCOMMIT .version
 
-processDAFile.out: 
+processSingleFile.out: 
 	@echo ">> Making executable $@ ..."
-	$(CXX) -o processDAFile_NOCOMMIT.out $^ $(CXXFLAGS) -L$(LIB) -lTWR_DA_a -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
-	./.moveFileIfRepoClean.sh processDAFile_NOCOMMIT.out processDAFile.out
-
-processMCFile.out: 
-	@echo ">> Making executable $@ ..."
-	$(CXX) -o processMCFile_NOCOMMIT.out $^ -D_IS_MC_ $(CXXFLAGS) -L$(LIB) -lTWR_MC_a -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
-	./.moveFileIfRepoClean.sh processMCFile_NOCOMMIT.out processMCFile.out
-
-processSingleFile.out: | processDAFile.out
-	ln -s processDAFile.out $@
+	$(CXX) -o processSingleFile_NOCOMMIT.out $^ $(CXXFLAGS) -L$(LIB) -lTWR_a -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
+	./.moveFileIfRepoClean.sh processSingleFile_NOCOMMIT.out $@
 
 # Directory structure target
 dirStructure:
 	@if ! [ -d $(BIN) ] ; then mkdir -p $(BIN); fi
-	@if ! [ -d $(BIN)MC/ ] ; then mkdir -p $(BIN); fi
 	@if ! [ -d $(LIB) ] ; then mkdir -p $(LIB); fi
 
 # Libraries
 lib: $(ALL_LIBS)
 
-lib_DA: $(LIB)libTWR_DA.so $(LIB)libTWR_DA_a.a
-
-lib_MC: $(LIB)libTWR_MC.so $(LIB)libTWR_MC_a.a
-
 # Library for DATA runs
-$(LIB)libTWR_DA.so:  $(BIN)TWR_DA_Dict.o $(LIB_OBJS)
+$(LIB)libTWR.so:  $(BIN)TWR_Dict.o $(LIB_OBJS)
 	@echo ">> Generating shared library $@ ..."
 	$(CXX) -shared -o $@ $^ -L$(AMSWD)/lib/$(MARCH)/  `root-config --libs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer
 
-$(LIB)libTWR_DA_a.a: $(BIN)TWR_DA_Dict.o $(LIB_OBJS)
+$(LIB)libTWR_a.a: $(BIN)TWR_Dict.o $(LIB_OBJS)
 	@echo ">> Generating static library $@ ..."
 	ar -rv $@ $^
 
-$(BIN)TWR_DA_Dict.C: $(LIB_HEADS) $(SRC)linkdef.h
-	@echo ">> Using rootcint to generate TWR_DA_Dict.C ..."
+$(BIN)TWR_Dict.C: $(LIB_HEADS) $(SRC)linkdef.h
+	@echo ">> Using rootcint to generate TWR_Dict.C ..."
 	rootcint -f $@ -c -p -I$(SRC) -I$(AMSSRC)/include $(LIB_HEADS_BARE) linkdef.h
 
-$(BIN)TWR_DA_Dict.o: $(BIN)TWR_DA_Dict.C
+$(BIN)TWR_Dict.o: $(BIN)TWR_Dict.C
 	@echo ">> Compiling dictionary $< ..."
 	$(CXX) -c $(CXXFLAGS) $< -o $@
-
-# Library for MC runs
-$(LIB)libTWR_MC.so:  $(BIN)MC/TWR_MC_Dict.o $(LIB_OBJS_MC)
-	@echo ">> Generating shared library $@ ..."
-	$(CXX) -D_IS_MC_ -shared -o $@ $^ -L$(AMSWD)/lib/$(MARCH)/ `root-config --libs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer
-
-$(LIB)libTWR_MC_a.a: $(BIN)MC/TWR_MC_Dict.o $(LIB_OBJS_MC)
-	@echo ">> Generating static library $@ ..."
-	ar -rv $@ $^
-
-$(BIN)MC/TWR_MC_Dict.C: $(LIB_HEADS) $(SRC)linkdef.h
-	@echo ">> Using rootcint to generate TWR_MC_Dict.C ..."
-	rootcint -f $@ -c -D_IS_MC_ -p -I$(SRC) -I$(AMSSRC)/include $(LIB_HEADS_BARE) linkdef.h
-
-$(BIN)MC/TWR_MC_Dict.o: $(BIN)MC/TWR_MC_Dict.C
-	@echo ">> Compiling dictionary $< ..."
-	$(CXX) -D_IS_MC_ -c $(CXXFLAGS) $< -o $@
 
 # Old library names -> link to new names for data library
 lib_aliases: $(LIB)libResTemp.so $(LIB)libResTemp_a.a
 
-$(LIB)libResTemp.so: | $(LIB)libTWR_DA.so
-	ln -s libTWR_DA.so $(LIB)libResTemp.so
+$(LIB)libResTemp.so: | $(LIB)libTWR.so
+	ln -s libTWR.so $(LIB)libResTemp.so
 
-$(LIB)libResTemp_a.a: | $(LIB)libTWR_DA_a.a
-	ln -s libTWR_DA_a.a $(LIB)libResTemp_a.a
+$(LIB)libResTemp_a.a: | $(LIB)libTWR_a.a
+	ln -s libTWR_a.a $(LIB)libResTemp_a.a
 
 
 # Target used for testing
@@ -181,17 +139,14 @@ test:
 	@echo $(ALL_PROGS_FINAL)
 	@echo "Git clean: $(GIT_CLEAN)"
 
-.PHONY: all all_clean prog lib lib_DA lib_MC lib_aliases dirStructure test clean clean_lib debug debug_clean
+.PHONY: all all_clean prog lib lib_aliases dirStructure test clean clean_lib debug debug_clean
 
 # Cleanup routines
 clean:
 	@echo ">> Deleting object files and Dict files ..."
 	rm -fv $(BIN)*.o
-	rm -fv $(BIN)MC/*.o
-	rm -fv $(BIN)TWR_DA_Dict.C
-	rm -fv $(BIN)TWR_DA_Dict.h
-	rm -fv $(BIN)MC/TWR_MC_Dict.C
-	rm -fv $(BIN)MC/TWR_MC_Dict.h
+	rm -fv $(BIN)TWR_Dict.C
+	rm -fv $(BIN)TWR_Dict.h
 	rm -fv $(ALL_PROGS_NC)
 	$(MAKE) -C sql clean
 

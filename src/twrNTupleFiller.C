@@ -1,13 +1,8 @@
 #include "twrNTupleFiller.h"
 
-#ifdef _IS_MC_
 #include "TkSens.h" // TkSens used to match MC Tracker hits to detected hits by ladder
-#endif
 
 
-
-
-#ifndef _IS_MC_
 
 //ClassImp(twrNTupleFiller);
 static void cloneRTI(twrRTI & dest,  AMSSetupR::RTI& orig){
@@ -53,7 +48,6 @@ static void cloneRTI(twrRTI & dest,  AMSSetupR::RTI& orig){
 
 }
 
-#endif
 
 static void cloneLevel1R( twrLevel1R& dest, const Level1R &copyMe)
 {
@@ -131,11 +125,6 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	// Decide how many events to loop through then start
 	int nEv = ch.GetEntries();
 	int nToUse;
-
-#ifndef _IS_MC_
-// 	AMSSetupR::RTI::UseLatest(); // before pass6
-	AMSSetupR::RTI::UseLatest(6); // pass6 onward
-#endif
 	
 	// These lines are recommended for inclusion.  They are in the analysis_amsd30n.C file
 	TkDBc::UseFinal();
@@ -144,6 +133,10 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	TRFITFFKEY.magtemp = 1;  // pass6 only
 	
 	AMSEventR* ev0=ch.GetEvent();
+	if (!ev0) return -20;
+	if (ev0->nMCEventg()==0) AMSSetupR::RTI::UseLatest(6); // pass6 onward
+	twrNT.isMC = ((ev->nMCEventg()>0)?true:false);
+	
 	if (maxEvents < 0) nToUse = nEv;
 	else nToUse = (maxEvents<nEv?maxEvents:nEv);
 	long int presel=0;
@@ -270,9 +263,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	
 	errRet++; if (ev->nLevel1() != 1) return errRet; // CUT 14
 	cloneLevel1R(twrNT.lvl1,ev->Level1(0));
-#ifndef _IS_MC_
-	cloneRTI(twrNT.RTI,rti);
-#endif
+	if (!twrNT.isMC) cloneRTI(twrNT.RTI,rti);
 
 //	twrNT.lvl1 = new twrLevel1R();
 
@@ -371,7 +362,6 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
  		else twrNT.rigMC = mcev->Momentum;
  		twrNT.mMC = mcev->Mass;
 
-#ifdef _IS_MC_
 /*		// TRD MC quantities
 		{
 			float lMass[20];
@@ -460,17 +450,14 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 			
 		}
 		
-#endif
 
  	}
  	else
  	{
-#ifndef _IS_MC_
  		twrNT.gtod_r = rti.r;
 		twrNT.gtod_theta = rti.theta;
 		twrNT.gtod_phi = rti.phi;
 		twrNT.cutoff_Stoermer = float(par->GetGeoCutoff(ev));
-#endif
  	}
 	
 	return 0;
@@ -566,8 +553,6 @@ int twrNTupleFiller::RichQC(twrRichQuality *vals)
 }
 
 
-#ifdef _IS_MC_
-
 // Find the TrMCCluster on a given tracker ladder (by TkId) with the highest momentum.
 // Return the index of this TrMCCluster in the AMSEventR, or -1 if none found.
 int associateTrMCCluster_TkId(AMSEventR* ev, int tkid)
@@ -614,6 +599,5 @@ void assocaiteAllTrCrossings(AMSEventR* ev, int fitID)
 }
 */
 
-#endif // _IS_MC_
 
 

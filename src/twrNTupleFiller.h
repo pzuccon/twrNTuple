@@ -59,9 +59,7 @@ public:
   //	ClassDef(twrNTupleFiller, 0);
 };
 
-#ifdef _IS_MC_
 int associateTrMCCluster_TkId(AMSEventR* ev, int tkid);
 int associateTrMCCluster_Pt(AMSEventR* ev, AMSPoint pt);
-#endif // _IS_MC_
 
 #endif /* twrNTupleFiller_h */
