@@ -2,7 +2,9 @@
 
 #include "TkSens.h" // TkSens used to match MC Tracker hits to detected hits by ladder
 
-
+// --- Signal handler initialization
+int twrNTupleFiller::_stop=0;
+// ---
 
 //ClassImp(twrNTupleFiller);
 static void cloneRTI(twrRTI & dest,  AMSSetupR::RTI& orig){
@@ -132,15 +134,18 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	TRFITFFKEY_DEF::ReadFromFile = 0;
 	TRFITFFKEY.magtemp = 1;  // pass6 only
 	
+	signal(SIGTERM, _sigHandler);
+	signal(SIGINT, _sigHandler);
+	
 	AMSEventR* ev0=ch.GetEvent();
 	if (!ev0) return -20;
 	if (ev0->nMCEventg()==0) AMSSetupR::RTI::UseLatest(6); // pass6 onward
-	twrNT.isMC = ((ev->nMCEventg()>0)?true:false);
 	
 	if (maxEvents < 0) nToUse = nEv;
 	else nToUse = (maxEvents<nEv?maxEvents:nEv);
 	long int presel=0;
-	for (int i = 0; i < nToUse;i++)
+	int i;
+	for (i = 0; i < nToUse;i++)
 	{
 	  if (i%10000==0) printf("[TWR] Processed %9d out of %9d(max %9d) preselected %9d \n",i,nToUse,nEv,presel);
 		AMSEventR* ev = ch.GetEvent(i);
@@ -149,10 +154,10 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 		if (procRet==0) {tt->Fill(); presel++;}
 		if (procRet<nCuts) accumCuts[procRet]++;
 //		hman.Fill("ProcessEventRet",procRet);
-//		if (stop==1) break;
+		if (twrNTupleFiller::_stop==1) break;
 	}
 	
-	printf("[TWR] FINISHED processing %d events\n",nToUse);
+	printf("[TWR] FINISHED processing %d of %d events\n",i,nToUse);
 
 	// Process histograms that track cuts and acceptances
 	char hTit[100];

@@ -7,6 +7,7 @@
 // #include <fstream>
 //#include <cmath>
 #include <climits>
+#include <csignal>
 
 #include "root_RVSP.h"
 #include "amschain.h"
@@ -26,6 +27,9 @@ class twrNTupleFiller
 {
 private:
 	bool isFileType(char* filename, char* ext);
+	// Early termination signal handler
+	static int _stop;
+	static void _sigHandler(int sig) {twrNTupleFiller::_stop=1; return;}
 
 public:
 // 	char inDataPath[256];
