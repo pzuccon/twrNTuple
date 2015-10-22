@@ -141,8 +141,9 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	if (!ev0) return -20;
 	if (ev0->nMCEventg()==0) AMSSetupR::RTI::UseLatest(6); // pass6 onward
 	
-	if (maxEvents < 0) nToUse = nEv;
-	else nToUse = (maxEvents<nEv?maxEvents:nEv);
+	int successRV=0;
+	if ((maxEvents < 0) || (maxEvents >= nEv)) nToUse = nEv;
+	else {nToUse=maxEvents; successRV=91;}
 	long int presel=0;
 	int iEv;
 	for (iEv = 0; iEv < nToUse;iEv++)
@@ -158,7 +159,7 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	}
 	
 	printf("[TWR] FINISHED processing %d of %d events (%d in file) preselected %d\n",iEv,nToUse,nEv,presel);
-	int successRV = (iEv==nEv)?0:90;
+	if (iEv < nToUse) successRV = 90;
 
 	// Process histograms that track cuts and acceptances
 	char hTit[100];
