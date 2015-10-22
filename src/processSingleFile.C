@@ -1,17 +1,6 @@
 
-#include <utility>	// pair
-#include <vector>	// vector
-#include <cmath>	// sqrt(double)
-#include <cstdio>	// sprintf, printf
-#include <iostream>	// cout
-
 #include "resClassCommon.h"
 #include "twrNTupleFiller.h"
-
-// #include "TMath.h"
-// #include "TCanvas.h"
-// #include "TFile.h"
-// #include "TH1F.h"
 
 
 int main(int argc, char** argv)

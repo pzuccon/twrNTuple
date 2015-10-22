@@ -87,13 +87,13 @@ processSingleFile.out version: $(BIN)twrNTupleFiller.o $(BIN)processSingleFile.o
 # Version tracking file for executables
 version:
 	@echo ">> Updating versioning file .version ..."
-	git describe --tags --long > .version_NOCOMMIT
-	./.moveFileIfRepoClean.sh .version_NOCOMMIT .version
+	@git describe --tags --long > .version_NOCOMMIT
+	@./.moveFileIfRepoClean.sh .version_NOCOMMIT .version
 
 processSingleFile.out: 
 	@echo ">> Making executable $@ ..."
 	$(CXX) -o processSingleFile_NOCOMMIT.out $^ $(CXXFLAGS) -L$(LIB) -lTWR_a -L$(AMSWD)/lib/$(MARCH)/ -l$(AMSNTUPLELIB) `root-config --cflags --glibs` -lMinuit -lTMVA -lXMLIO -lMLP -lTreePlayer -lgfortran -lRFIO -lNetx
-	./.moveFileIfRepoClean.sh processSingleFile_NOCOMMIT.out $@
+	@./.moveFileIfRepoClean.sh processSingleFile_NOCOMMIT.out $@
 
 # Directory structure target
 dirStructure:
@@ -147,8 +147,10 @@ clean:
 	rm -fv $(BIN)*.o
 	rm -fv $(BIN)TWR_Dict.C
 	rm -fv $(BIN)TWR_Dict.h
+# Keep the "commit" version of the main executable, if it exists.
 	rm -fv $(ALL_PROGS_NC)
-	$(MAKE) -C sql clean
+	rm -fv .version_NOCOMMIT
+#	$(MAKE) -C sql clean
 
 clean_lib: clean
 	@echo ">> Deleting libraries ..."

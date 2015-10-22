@@ -144,20 +144,21 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	if (maxEvents < 0) nToUse = nEv;
 	else nToUse = (maxEvents<nEv?maxEvents:nEv);
 	long int presel=0;
-	int i;
-	for (i = 0; i < nToUse;i++)
+	int iEv;
+	for (iEv = 0; iEv < nToUse;iEv++)
 	{
-	  if (i%10000==0) printf("[TWR] Processed %9d out of %9d(max %9d) preselected %9d \n",i,nToUse,nEv,presel);
-		AMSEventR* ev = ch.GetEvent(i);
+		if (iEv%10000==0) printf("[TWR] Processed %9d of %9d (max %9d) preselected %9d \n",iEv,nToUse,nEv,presel);
+		AMSEventR* ev = ch.GetEvent(iEv);
 		int procRet = fillNTuple_preselect(nt, ev);
-//		printf("[TWR] ev%d: %d\n",i,procRet);
+//		printf("[TWR] ev%d: %d\n",iEv,procRet);
 		if (procRet==0) {tt->Fill(); presel++;}
 		if (procRet<nCuts) accumCuts[procRet]++;
 //		hman.Fill("ProcessEventRet",procRet);
 		if (twrNTupleFiller::_stop==1) break;
 	}
 	
-	printf("[TWR] FINISHED processing %d of %d events\n",i,nToUse);
+	printf("[TWR] FINISHED processing %d of %d events (%d in file) preselected %d\n",iEv,nToUse,nEv,presel);
+	int successRV = (iEv==nEv)?0:90;
 
 	// Process histograms that track cuts and acceptances
 	char hTit[100];
@@ -189,7 +190,7 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	printf("[TWR] Output n-tuple file will be found at %s\n",outNTupleFile);
 //	hman.Save();
 
-	return 0;
+	return successRV;
 }
 
 int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
