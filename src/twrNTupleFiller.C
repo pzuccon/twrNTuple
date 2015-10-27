@@ -280,6 +280,12 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	twrNT.trPattern = trTr->GetBitPatternJ();
 	twrNT.trPatternXY = trTr->GetBitPatternXYJ();
 	
+	for (int jL=1; jL<=9; jL++)
+	{
+		AMSPoint lPt = trTr->GetHitCooLJ(jL);
+		for (int ix=0; ix<=3; ix++) twrNT.hitCooTrL_rec[jL-1][ix]=lPt[ix];
+	}
+	
 	if (twrNT.trFitCode >= 0)
 	{
 		TrTrackPar fit_C = trTr->gTrTrackPar(twrNT.trFitCode);
@@ -420,6 +426,8 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 						twrNT.momTrL_MC[il]=thisMom;
 						twrNT.pidTrL_MC[il]=trmc->GetPart();
 						twrNT.isPrimaryTrL_MC[il]=trmc->IsPrimary();
+						AMSPoint mcPt=trmc->GetXgl();
+						for (int ix=0; ix<3; ix++) twrNT.hitCooTrL_MC[il][ix]=mcPt[ix];
 					}
 				}
 			} // il

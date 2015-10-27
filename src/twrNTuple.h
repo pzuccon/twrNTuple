@@ -69,6 +69,8 @@ public:
 	float bcorr_K;
 	short int bcorrFlag_K;
 	
+	float hitCooTrL_rec[9][3];
+	
 // === RICH quantities ===
 	int flagRich; // flagRich==1 iff RichRingR passes set of cuts supplied by J.Berdugo
 	float betaRich;
@@ -109,6 +111,7 @@ public:
 	int tkId_Interpolated[9];
 	float momTrL_MC[9];
 	bool isPrimaryTrL_MC[9];
+	float hitCooTrL_MC[9][3];
 	// MC TOF
 	int pidTofL_MC[4];
 	float betaTofL_MC[4];
