@@ -7,13 +7,13 @@
 // #include <fstream>
 //#include <cmath>
 #include <climits>
+#include <csignal>
 
 #include "root_RVSP.h"
 #include "amschain.h"
 #include "HistoMan.h"
 #include "FrameTrans.h"
 #include "root_setup.h"
-#include "TrdKCluster.h"
 #include "TofTrack.h"
 #include "TNtuple.h"
 #include "Tofrec02_ihep.h"
@@ -22,10 +22,14 @@
 #include "twrNTuple.h"
 #include "resClassCommon.h"
 
+
 class twrNTupleFiller
 {
 private:
 	bool isFileType(char* filename, char* ext);
+	// Early termination signal handler
+	static int _stop;
+	static void _sigHandler(int sig) {twrNTupleFiller::_stop=1; return;}
 
 public:
 // 	char inDataPath[256];
@@ -58,5 +62,8 @@ public:
 	
   //	ClassDef(twrNTupleFiller, 0);
 };
+
+int associateTrMCCluster_TkId(AMSEventR* ev, int tkid);
+int associateTrMCCluster_Pt(AMSEventR* ev, AMSPoint pt);
 
 #endif /* twrNTupleFiller_h */

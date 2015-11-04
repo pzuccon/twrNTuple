@@ -1,161 +1,10 @@
 #include "twrNTupleFiller.h"
-#include "twrTrdK.h"
-#include "TrdKCluster.h"
 
+#include "TkSens.h" // TkSens used to match MC Tracker hits to detected hits by ladder
 
-void FilltwrTrdKHit( twrTrdKHit* mhit,TrdKHit* hit){
-
-  AMSPoint pnt;
-  AMSDir dir;
-
-  mhit->tube_length=hit->Tube_Track_3DLength(&pnt,&dir);
- 
-
-  
-  mhit->Time=hit->Time;
-  mhit->TRDHit_Amp=hit->TRDHit_Amp;
-  mhit->TRDHit_GainCorrection=hit->TRDHit_GainCorrection;
-  mhit->TRDHit_Layer=hit->TRDHit_Layer;
-  mhit->TRDHit_Ladder=hit->TRDHit_Ladder;
-  mhit->tubeid=hit->tubeid;
-  mhit->TRDHit_x=hit->TRDHit_x;
-  mhit->TRDHit_y=hit->TRDHit_y;
-  mhit->TRDHit_z=hit->TRDHit_z;
-  mhit->TRDHit_TRDTrack_x=hit->TRDHit_TRDTrack_x;
-  mhit->TRDHit_TRDTrack_y=hit->TRDHit_TRDTrack_y;
-  mhit->TRDHit_TRDTrack_z=hit->TRDHit_TRDTrack_z;
-
-  for (int ii=0;ii<3;ii++){
-    mhit->TRDTube_Center[ii]=hit->TRDTube_Center[ii];
-    mhit->TRDTube_Dir[ii]=hit->TRDTube_Dir[ii];
-  }
-
-}
-
-
-Bool_t FillTrdK(AMSEventR* pev,ParticleR* part, twrTrdK* tdk){
-
-  
-  TrdTrackR *trdtrack=pev->pTrdTrack(part->iTrdTrack());
-  TrTrackR *trk=pev->pTrTrack(part->iTrTrack());
-  if(trdtrack){
-    tdk->ntrdseg=trdtrack->NTrdSegment();
-    for (int ss=0;ss<tdk->ntrdseg;ss++)
-      tdk->nlay+=trdtrack->pTrdSegment(ss)->NTrdCluster();
-    //---TrdTrack Match
-    AMSDir dir;AMSPoint pos;
-    
-    if(trk){
-      trk->Interpolate(trdtrack->Coo[2],pos,dir);
-      tdk->distrd[0]=trdtrack->Coo[0]-pos.x();
-      tdk->distrd[1]=trdtrack->Coo[1]-pos.y();
-      AMSDir trddir(trdtrack->Theta,trdtrack->Phi);
-      tdk->distrd[2]=acos(fabs(trddir.prod(dir)))*180/3.1415926;
-    }
-  }
-
-  //---TrdTrack-Default-Charge
-  ChargeR *charge=pev->pCharge(part->iCharge());
-  if(charge){
-    ChargeSubDR *zTrd=charge->getSubD("AMSChargeTRD");
-    if(zTrd){
-      tdk->trd_rz = TMath::Max(Int_t(zTrd->ChargeI[0]),1);
-      tdk->trd_rq = zTrd->Q;
-      tdk->trd_rpz= zTrd->getProb();
-    }
-  }
-
- 
-  //-----TrdK
-  //  for(int i=0;i<20;i++){trd_amplk[i]=trd_pathlk[i]=0;}
-
-
-  if(!trk)return false;
-  //---
-
-
-  float ecalen=0;
-  EcalShowerR *show= pev->pEcalShower(part->iEcalShower());
-  if(show){ecalen=show->EnergyE;}
-  bool ecalpar=(ecalen>1);
-
-
-  //---
-  //---Track
-  tdk->fid=trk->iTrTrackPar(1,5,2); // Get any prefered fit code
-  if (tdk->fid < 0) return false;
-
-  double trdlikr[3]={-1,-1,-1},trdlikre[3]={-1,-1,-1},trdlik[3]={-1,-1,-1}; //LikelihoodRatio :  e/P, e/H, P/H
-
-  //int NHits=0;  //number of hits in Likelihood Calculation
-
-  float threshold=15;  //ADC above will be taken into account in Likelihood Calculation
-
-  TrdKCluster trdcluster=TrdKCluster(pev,trk,tdk->fid);
-
-  tdk->IsReadAlignmentOK=trdcluster.IsReadAlignmentOK; //0: No Alignment, 1: Static Alignment Layer level,  2: Dynamic
-  tdk->IsReadCalibOK=trdcluster.IsReadCalibOK;  // 0: No Gain Calibration, 1: Gain Calibration Succeeded
-
-  if(tdk->IsReadAlignmentOK==0||tdk->IsReadCalibOK==0){tdk->trd_statk=-200;} 
-  else                                      {tdk->trd_statk=-100;}
-  if(tdk->trd_statk!=-100)return false;
-
-  tdk->trd_statk=trdcluster.GetLikelihoodRatio_TrTrack(threshold,tdk->trd_likr,tdk->NHits);//Track=1
- 
-  trdcluster.GetOffTrackHit_TrTrack(tdk->trd_onhitk,tdk->trd_oampk);
-
-  if(tdk->trd_statk!=1){
-    tdk->trd_statk=trdcluster.GetLikelihoodRatio_TRDRefit(threshold,tdk->trd_likr,tdk->NHits);
-    if(tdk->trd_statk==1)tdk->trd_statk+=10;//TRD=11
-    trdcluster.GetOffTrackHit_TRDRefit(tdk->trd_onhitk,tdk->trd_oampk);
-  }
-  // trd_nhitk=NHits;//Number of surrounding fired tubes
-  if(tdk->trd_statk%10==1){//trd_statk=1 || trd_statk=11
-    if(ecalpar){
-      if(tdk->trd_statk==1)trdcluster.GetLikelihoodRatio_TrTrack(threshold,trdlikre,tdk->NHits,ecalen,trdlik);
-      else            trdcluster.GetLikelihoodRatio_TRDRefit(threshold,trdlikre,tdk->NHits,ecalen,trdlik);
-    }
-    for(int i=0;i<3;i++){tdk->trd_lik[i]=trdlikr[i];tdk->trd_likre[i]=trdlikre[i];}
-    AMSPoint pnt; AMSDir dir;
-    int x= trdcluster.GetTrTrackExtrapolation(pnt,dir);
-    if(x>=0){
-      for(int i=0;i<tdk->NHits;i++){
-	TrdKHit *hit=trdcluster.GetHit(i);
-	if(!hit)continue;
-	twrTrdKHit *mtdhit=new twrTrdKHit();
-	FilltwrTrdKHit( mtdhit,hit);
-	tdk->mhits.push_back(mtdhit);
-      }
-    }
-  }
-  ///TRD-Charge
-  float betaToUse=1.; // Use default value of 1. if there is no BetaH object for the particle
-  if (part->iBetaH() != -1) betaToUse=part->pBetaH()->GetBeta();
-    trdcluster.CalculateTRDCharge(0,betaToUse);
-    tdk->trd_qk[0]=   trdcluster.GetTRDCharge();
-    tdk->trd_qk[1]=   trdcluster.GetTRDChargeUpper();
-    tdk->trd_qk[2]=   trdcluster.GetTRDChargeLower();
-    tdk->trd_qrmsk[0]=trdcluster.GetTRDChargeError();
-    tdk->trd_qnhk[0]= trdcluster.GetQNHit();
-    tdk->trd_qnhk[1]= trdcluster.GetQNHitUpper();
-    tdk->trd_qnhk[2]= trdcluster.GetQNHitLower();
-    tdk->trd_ipch=    trdcluster.GetIPChi2();//impact Chis
-
-    ///--End Fragmentation delta
-      trdcluster.CalculateTRDCharge(1,betaToUse);
-      tdk->trd_qk[3]=   trdcluster.GetTRDCharge();
-      tdk->trd_qrmsk[1]=trdcluster.GetTRDChargeError();
-      trdcluster.CalculateTRDCharge(2,betaToUse);
-      tdk->trd_qk[4]=   trdcluster.GetTRDCharge();
-      tdk->trd_qrmsk[2]=trdcluster.GetTRDChargeError();
-
-
-
-      return true;
-}
-
-
-
+// --- Signal handler initialization
+int twrNTupleFiller::_stop=0;
+// ---
 
 //ClassImp(twrNTupleFiller);
 static void cloneRTI(twrRTI & dest,  AMSSetupR::RTI& orig){
@@ -248,16 +97,16 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	// Load input AMS data file
 	int addOK;
 	addOK = ch.Add(rootFile);
-	printf("Loading single AMS data file: %s\n  > Status=%d\n",rootFile,addOK);
+	printf("[TWR] Loading single AMS data file: %s\n[TWR]   > Status=%d\n",rootFile,addOK);
 	
-	if (!ch.GetEntries()) {printf("ERROR processing input data file(s)--ABORT doPreselect()\n"); return addOK;}
-	printf("Number of entries loaded: %d\n",ch.GetEntries());	
+	if (!ch.GetEntries()) {printf("[TWR] ERROR processing input data file(s)--ABORT doPreselect()\n"); return addOK;}
+	printf("[TWR] Number of entries loaded: %d\n",ch.GetEntries());	
 	
 	// Open output file and tree for n-tuples
 	TFile* tf = new TFile(outNTupleFile, "RECREATE");
 	if (!tf->IsOpen())
 	{
-		printf("ERROR opening output TFile:%s--ABORT doPreselect()\n",outNTupleFile);
+		printf("[TWR] ERROR opening output TFile:%s--ABORT doPreselect()\n",outNTupleFile);
 		if (tf) {delete tf; tf=0;}
 		return -10;
 	}
@@ -278,9 +127,6 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	// Decide how many events to loop through then start
 	int nEv = ch.GetEntries();
 	int nToUse;
-
-// 	AMSSetupR::RTI::UseLatest(); // before pass6
-	AMSSetupR::RTI::UseLatest(6); // pass6 onward
 	
 	// These lines are recommended for inclusion.  They are in the analysis_amsd30n.C file
 	TkDBc::UseFinal();
@@ -288,23 +134,32 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	TRFITFFKEY_DEF::ReadFromFile = 0;
 	TRFITFFKEY.magtemp = 1;  // pass6 only
 	
+	signal(SIGTERM, _sigHandler);
+	signal(SIGINT, _sigHandler);
+	
 	AMSEventR* ev0=ch.GetEvent();
-	if (maxEvents < 0) nToUse = nEv;
-	else nToUse = (maxEvents<nEv?maxEvents:nEv);
+	if (!ev0) return -20;
+	if (ev0->nMCEventg()==0) AMSSetupR::RTI::UseLatest(6); // pass6 onward
+	
+	int successRV=0;
+	if ((maxEvents < 0) || (maxEvents >= nEv)) nToUse = nEv;
+	else {nToUse=maxEvents; successRV=91;}
 	long int presel=0;
-	for (int i = 0; i < nToUse;i++)
+	int iEv;
+	for (iEv = 0; iEv < nToUse;iEv++)
 	{
-	  if (i%10000==0) printf("Processed %9d out of %9d(max %9d)  preselected %9d \n",i,nToUse,nEv,presel);
-		AMSEventR* ev = ch.GetEvent(i);
+		if (iEv%10000==0) printf("[TWR] Processed %9d of %9d (max %9d) preselected %9d \n",iEv,nToUse,nEv,presel);
+		AMSEventR* ev = ch.GetEvent(iEv);
 		int procRet = fillNTuple_preselect(nt, ev);
-//		printf("ev%d: %d\n",i,procRet);
+//		printf("[TWR] ev%d: %d\n",iEv,procRet);
 		if (procRet==0) {tt->Fill(); presel++;}
 		if (procRet<nCuts) accumCuts[procRet]++;
 //		hman.Fill("ProcessEventRet",procRet);
-//		if (stop==1) break;
+		if (twrNTupleFiller::_stop==1) break;
 	}
 	
-	printf("FINISHED processing %9d events\n",nToUse);
+	printf("[TWR] FINISHED processing %d of %d events (%d in file) preselected %d\n",iEv,nToUse,nEv,presel);
+	if (iEv < nToUse) successRV = 90;
 
 	// Process histograms that track cuts and acceptances
 	char hTit[100];
@@ -327,22 +182,20 @@ int twrNTupleFiller::doPreselect_single_file(char* rootFile, char* outNTupleFile
 	h_preselect->SetStats(false);
 	tf->cd();
 //	gDirectory->pwd();
-    printf("Output directed to: %s",gDirectory->GetPath());
+    printf("[TWR] Output directed to: %s\n",gDirectory->GetPath());
     h_returnVal->Write();
 	h_preselect->Write();
 	
 	// Write file; wrap up
 	tf->Write();
-	printf("Output n-tuple file will be found at %s\n",outNTupleFile);
+	printf("[TWR] Output n-tuple file will be found at %s\n",outNTupleFile);
 //	hman.Save();
 
-	return 0;
+	return successRV;
 }
 
 int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 {  
-  
-//   twrNT.trdk.Clear(); // Overall "Clear" takes care of this.
 	twrNT.Clear();
 	
 	int errRet=0;
@@ -360,7 +213,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 		int rtiRet = ev->GetRTI(rti);
 		errRet++; if (rtiRet != 0) return errRet; // CUT 2
 		
-		//printf("RTI Status: %d , livetime: %f\n",ev->GetRTIStat(),rti.lf);
+		//printf("[TWR] RTI Status: %d , livetime: %f\n",ev->GetRTIStat(),rti.lf);
 		errRet++; if (rti.lf < 0.7) return errRet; // CUT 3
 		errRet++; if (rti.IsInSAA()) return errRet; // CUT 4
 		errRet++; if ((rti.nhwerr/rti.ntrig)>0.01) return errRet; // CUT 5
@@ -417,7 +270,7 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	
 	errRet++; if (ev->nLevel1() != 1) return errRet; // CUT 14
 	cloneLevel1R(twrNT.lvl1,ev->Level1(0));
-	cloneRTI(twrNT.RTI,rti);
+	if (!twrNT.isMC) cloneRTI(twrNT.RTI,rti);
 
 //	twrNT.lvl1 = new twrLevel1R();
 
@@ -426,6 +279,12 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	
 	twrNT.trPattern = trTr->GetBitPatternJ();
 	twrNT.trPatternXY = trTr->GetBitPatternXYJ();
+	
+	for (int jL=1; jL<=9; jL++)
+	{
+		AMSPoint lPt = trTr->GetHitCooLJ(jL);
+		for (int ix=0; ix<=3; ix++) twrNT.hitCooTrL_rec[jL-1][ix]=lPt[ix];
+	}
 	
 	if (twrNT.trFitCode >= 0)
 	{
@@ -507,7 +366,6 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
 	twrNT.betaSTof = betaH->GetBetaS();
 	twrNT.betaCTof = betaH->GetBetaC();
 	twrNT.betaCTof_Err = betaH->GetEBetaCV();
-	FillTrdK(ev,ev->pParticle(0), &(twrNT.trdk));
  	if (twrNT.isMC)
  	{
 	  //errRet++; if (ev->nMCEventg() < 1) return errRet;
@@ -516,6 +374,98 @@ int twrNTupleFiller::fillNTuple_preselect(twrNTuple &twrNT, AMSEventR* ev)
  		if (twrNT.qMC != 0.) twrNT.rigMC = (mcev->Momentum / twrNT.qMC);
  		else twrNT.rigMC = mcev->Momentum;
  		twrNT.mMC = mcev->Mass;
+
+/*		// TRD MC quantities
+		{
+			float lMass[20];
+			for (int il=0; il<20; il++) lMass[il]=-1.;
+			
+			for (int itrd=0; itrd<ev->nTrdMCCluster(); itrd++)
+			{
+				TrdMCClusterR* trdmc=ev->pTrdMCCluster(itrd);
+				int ilay = trdmc->Layer;
+				int pNo = trdmc->ParticleNo;
+				float thisM=(pNo<1 || pNo>50)?-1.:geantMass[pNo - 1];
+				if (thisM>lMass[ilay] || (thisM==lMass[ilay] && trdmc->Ekin > twrNT.momTrdL_MC[ilay]))
+				{
+					lMass[ilay]=thisM;
+					twrNT.momTrdL_MC[ilay]=trdmc->Ekin;
+					twrNT.pidTrdL_MC[ilay]=pNo;
+				}
+			}
+		}*/
+		
+		// Tracker MC quantities
+		int iMCCl[9];
+//		int tkidInt[9];
+		int bestFitId = (twrNT.trFitCode >= 0) ? twrNT.trFitCode : twrNT.trFitCode_K;
+		// Retrieve tracker ladder identifiers (TkId) for interpolated track
+		for (int il=0; il<9; il++)
+		{
+			AMSPoint pt=trTr->InterpolateLayerJ(il+1,bestFitId);
+			TkSens tks(pt, true);
+//			tkidInt[il]=tks.GetLadTkID(); // 0 if track interpolation does not fall on a ladder			
+			twrNT.tkId_Interpolated[il]=tks.GetLadTkID(); // 0 if track interpolation does not fall on a ladder
+		}
+
+		// Loop through MC tracker clusters to associate them with interpolated ladders
+		for (int icl=0; icl<ev->nTrMCCluster(); icl++)
+		{
+			TrMCClusterR* trmc = ev->pTrMCCluster(icl);
+			for (int il=0; il<9; il++)
+			{
+				// Skip the layers for which the interpolated track doesn't fall on a ladder
+				if (twrNT.tkId_Interpolated[il] == 0) continue;
+				
+				int thisTkid = trmc->GetTkId();
+				if (twrNT.tkId_Interpolated[il] == thisTkid)
+				{
+					float thisMom=fabs(trmc->GetMomentum()); // Is retaining the sign important?
+					if (thisMom > twrNT.momTrL_MC[il]) // momTrL_MC has been initialized to zero
+					{
+						twrNT.momTrL_MC[il]=thisMom;
+						twrNT.pidTrL_MC[il]=trmc->GetPart();
+						twrNT.isPrimaryTrL_MC[il]=trmc->IsPrimary();
+						AMSPoint mcPt=trmc->GetXgl();
+						for (int ix=0; ix<3; ix++) twrNT.hitCooTrL_MC[il][ix]=mcPt[ix];
+					}
+				}
+			} // il
+		} // icl
+		
+		
+/*
+		{
+			float lMass[9];
+			for (int il=0; il<9; il++) lMass[il]=-1.;
+			
+			for (int itr=0; itr<ev->nTrMCCluster(); itr++)
+			{
+				TrMCClusterR* trmc=ev->pTrMCCluster(itr);
+				int ilay = fabs(trmc->GetTkId()/100);
+				if (ilay==8) ilay=1;
+				else if (ilay<8) ilay++;
+				ilay--;
+				
+				int pNo = trmc->GetPart();
+				float thisM=(pNo<1 || pNo>50)?-1.:geantMass[pNo - 1];
+				if (thisM>lMass[ilay] || (thisM==lMass[ilay] && trmc->GetMomentum() > twrNT.momTrdL_MC[ilay]))
+				{
+					lMass[ilay]=thisM;
+					twrNT.momTrL_MC[ilay]=trmc->GetMomentum();
+					twrNT.pidTrL_MC[ilay]=pNo;
+					twrNT.isPrimaryTrL_MC[ilay]=trmc->IsPrimary();
+				}
+			}
+		}
+*/
+		
+		// TOF MC quantities
+		{
+			
+		}
+		
+
  	}
  	else
  	{
@@ -616,3 +566,53 @@ int twrNTupleFiller::RichQC(twrRichQuality *vals)
 	
 	return 1;
 }
+
+
+// Find the TrMCCluster on a given tracker ladder (by TkId) with the highest momentum.
+// Return the index of this TrMCCluster in the AMSEventR, or -1 if none found.
+int associateTrMCCluster_TkId(AMSEventR* ev, int tkid)
+{
+//	int nFound=0;
+	if (!ev) return -5;
+	float highMom=0.;
+	int ind=-2;
+	for (int icl=0; icl<ev->nTrMCCluster(); icl++)
+	{
+		TrMCClusterR* trmc = ev->pTrMCCluster(icl);
+		if (tkid == trmc->GetTkId())
+		{
+//			nFound++;
+			float thisMom=fabs(trmc->GetMomentum());
+			if (thisMom>highMom) {highMom=thisMom; ind=icl;}
+		}
+	}
+
+	return ind;
+}
+
+// Find the TrMCCluster on the same TkId as a given point.
+// If there are multiple, choose the one with the highest momentum.
+// Return the index of this TrMCCluster in the event, -1 if none found,
+// -2 if the AMSPoint does not fall on a ladder.
+int associateTrMCCluster_Pt(AMSEventR* ev, AMSPoint pt)
+{
+	TkSens tks(pt, true);
+	int tkid=tks.GetLadTkID();
+	if (tkid==0) return -2;
+	else return associateTrMCCluster_TkId(ev, tkid);
+}
+
+/*
+void assocaiteAllTrCrossings(AMSEventR* ev, int fitID)
+{
+	int iMCCl[10];
+	for (int jl=1; jl<=9; jl++)
+	{
+		AMSPoint pt=InterpolateLayerJ(jl,fitID);
+		iMCCl[jl]=associateTrMCCluster_Pt(ev, pt);
+	}
+}
+*/
+
+
+

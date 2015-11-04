@@ -3,9 +3,9 @@
 
 #include "TObject.h"
 #include "twrLevel1R.h"
-#include "twrRTI.h"
-#include "twrTrdK.h"
 #include "twrRichQuality.h"
+
+#include "twrRTI.h"
 
 
 // Variables fetched by ProcessEvent(), put into a class
@@ -23,7 +23,6 @@ public:
 	twrLevel1R lvl1;
 	twrRTI     RTI;
 	twrRichQuality richQual; // Values used for RICH quality cuts
-	twrTrdK   trdk;
 
 	// === Basics about event ===
 	unsigned int Event;
@@ -70,6 +69,8 @@ public:
 	float bcorr_K;
 	short int bcorrFlag_K;
 	
+	float hitCooTrL_rec[9][3];
+	
 // === RICH quantities ===
 	int flagRich; // flagRich==1 iff RichRingR passes set of cuts supplied by J.Berdugo
 	float betaRich;
@@ -100,6 +101,22 @@ public:
 // === MC quantities ===
 	bool isMC; // Flag for whether not event is an MC event
 	float qMC, rigMC, mMC; // True values of Q,R,m for incoming particle
+	
+
+//	// MC TRD
+//	int pidTrdL_MC[20];
+//	float momTrdL_MC[20];
+	// MC Tracker
+	int pidTrL_MC[9];
+	int tkId_Interpolated[9];
+	float momTrL_MC[9];
+	bool isPrimaryTrL_MC[9];
+	float hitCooTrL_MC[9][3];
+	// MC TOF
+	int pidTofL_MC[4];
+	float betaTofL_MC[4];
+	// MC RICH
+
 	
 // === Derived quantities ===	
 	float betaMC(); // True beta of incoming particle, from other MC quantities
@@ -135,7 +152,7 @@ public:
 	bool posMomentum() {return bool(1 & (fStatus>>34));}
 	bool isNaF() {return bool(1 & (fStatus>>52));}
 
-	ClassDef(twrNTuple, 5);
+	ClassDef(twrNTuple, 6);
 };
 
 #endif

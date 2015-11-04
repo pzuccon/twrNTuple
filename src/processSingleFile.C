@@ -1,24 +1,13 @@
 
-#include <utility>	// pair
-#include <vector>	// vector
-#include <cmath>	// sqrt(double)
-#include <cstdio>	// sprintf, printf
-#include <iostream>	// cout
-
 #include "resClassCommon.h"
 #include "twrNTupleFiller.h"
-
-// #include "TMath.h"
-// #include "TCanvas.h"
-// #include "TFile.h"
-// #include "TH1F.h"
 
 
 int main(int argc, char** argv)
 {
 	if ((argc < 3)||(argc > 4))
 	{
-		printf("ERROR: Improper number of arguments:\n %s <in_rootFile> <out_ntupleFile> [maxEvents]\n",argv[0]);
+		printf("[TWR] ERROR: Improper number of arguments:\n[TWR]  %s <in_rootFile> <out_ntupleFile> [maxEvents]\n",argv[0]);
 		return -1;
 	}
 

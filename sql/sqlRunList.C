@@ -552,7 +552,7 @@ int _addDB(const char* line)
 	}
 	else
 	{
-		printf("SUCCESS: Insert %s\n",line);
+		if (!quiet) printf("SUCCESS: Insert %s\n",line);
 		return 0;
 	}
 }
